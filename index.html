@@ -3,513 +3,413 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iDeaL Oral Reading Fluency & Comprehension Assessment</title>
+  <title>Oral Reading & Comprehension Assessment</title>
   <style>
     :root {
-      --primary: #1e3a8a;
-      --primary-light: #2563eb;
-      --accent: #10b981;
-      --bg: #f8fafc;
-      --card: #ffffff;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
       --text: #0f172a;
-      --muted: #64748b;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #d97706;
     }
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .container { width: 100%; max-width: 880px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 32px; min-height: 600px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-    
-    .screen { display: none; flex-direction: column; gap: 20px; }
-    .screen.active { display: flex; }
-    
-    h1, h2, h3 { color: var(--primary); margin: 0 0 10px 0; }
-    p { font-size: 1.1rem; line-height: 1.6; margin: 0; }
-    
-    button { background: var(--primary-light); color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.2s; align-self: flex-start; }
-    button:hover { background: var(--primary); }
-    button:disabled { background: var(--muted); opacity: 0.6; cursor: not-allowed; }
-    .btn-secondary { background: #e2e8f0; color: #1e293b; }
-    .btn-secondary:hover { background: #cbd5e1; }
-    
-    .test-box { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 18px; text-align: center; background: #f1f5f9; margin-bottom: 10px; }
-    .meter-bar { width: 100%; height: 18px; background: #e2e8f0; border-radius: 9px; overflow: hidden; margin-top: 12px; }
-    .meter-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.1s; }
-    
-    .text-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
-    .text-card { border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; cursor: pointer; text-align: left; background: white; transition: all 0.2s; }
-    .text-card:hover { border-color: var(--primary-light); background: #eff6ff; }
-    
-    .reading-passage { font-size: 1.35rem; line-height: 1.9; letter-spacing: 0.3px; background: #f8fafc; padding: 24px; border-radius: 12px; border-left: 6px solid var(--primary-light); white-space: pre-line; }
-    .countdown { font-size: 5rem; font-weight: 800; color: var(--primary); text-align: center; margin: 40px 0; }
-    
-    .q-card { background: #eff6ff; padding: 20px; border-radius: 12px; border: 1px solid #bfdbfe; }
-    .esol-prompt { background: #fef3c7; border: 2px solid #f59e0b; color: #92400e; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 1.15rem; margin-top: 12px; display: none; }
-    
-    .editable-transcript { width: 100%; height: 110px; padding: 12px; font-size: 1.05rem; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; margin-top: 8px; resize: vertical; }
-    
-    .rsr-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.95rem; }
-    .rsr-table th, .rsr-table td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
-    .rsr-table th { background: #f1f5f9; color: var(--primary); }
-    .math-box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 0.95rem; color: #334155; margin-top: 6px; }
 
-    .q-audit-item { background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:12px; margin-bottom:10px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); color: var(--text); padding: 20px; line-height: 1.5; }
+    .container { max-width: 800px; margin: 0 auto; background: var(--card-bg); padding: 28px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    h1, h2, h3 { margin-bottom: 16px; color: var(--text); }
+    .step { display: none; }
+    .step.active { display: block; }
+    
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+    select, input[type="text"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 16px; font-size: 16px; }
+    
+    .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #64748b; }
+    .btn-secondary:hover { background: #475569; }
 
-    .nav-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 20px; }
-    .step-indicator { font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+    .passage-box { font-size: 20px; line-height: 1.8; padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: #fafafa; margin-bottom: 20px; user-select: none; }
+    .passage-word { display: inline-block; margin-right: 4px; padding: 2px 4px; border-radius: 4px; }
+    .passage-word.miscue-sub { background-color: #fef08a; color: #854d0e; text-decoration: line-through; }
+    .passage-word.miscue-omission { background-color: #fecaca; color: #991b1b; }
+    
+    .status-banner { padding: 12px; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .live-transcript { min-height: 80px; padding: 12px; border: 1px dashed var(--border); border-radius: 6px; background: #f1f5f9; font-style: italic; color: var(--text-muted); margin-bottom: 16px; }
+
+    .q-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff; }
+    .q-type { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 4px; }
+    
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: #f1f5f9; }
+    
+    .audio-preview { margin: 20px 0; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
   </style>
 </head>
 <body>
 
 <div class="container">
   
-  <!-- Step 1: Welcome -->
-  <div id="step-1" class="screen active">
-    <h1>Welcome to Reading Time! 👋</h1>
-    <p>Today you will read a story out loud on your Chromebook and answer a few questions about what you read.</p>
-    <p>Click below when you are ready to test your speaker and microphone!</p>
-    <button onclick="goToStep(2)">Get Started →</button>
+  <!-- STEP 1: SETUP -->
+  <div id="step-1" class="step active">
+    <h1>Oral Reading Assessment Setup</h1>
+    <label for="student-name">Student Name</label>
+    <input type="text" id="student-name" placeholder="Enter student full name">
+
+    <label for="story-select">Select Story Passage</label>
+    <select id="story-select">
+      <option value="aotea">Aotea (Great Barrier Island)</option>
+      <option value="funrun">The Fun Run</option>
+    </select>
+
+    <button class="btn" onclick="goToStep2()">Continue to Reading Step</button>
   </div>
 
-  <!-- Step 2: Speaker & Mic Check -->
-  <div id="step-2" class="screen">
-    <h1>Audio & Speaker Check 🔊🎤</h1>
-    <p>First, let's make sure you can hear us and we can hear you.</p>
+  <!-- STEP 2: READING PASSAGE -->
+  <div id="step-2" class="step">
+    <h2>Step 1: Reading Aloud</h2>
+    <div class="status-banner">
+      <span id="mic-status">Status: Ready</span>
+      <span id="timer-display">Time: 0s</span>
+    </div>
+
+    <div class="passage-box" id="passage-container"></div>
     
-    <div class="test-box">
-      <h3>1. Test Speaker Volume</h3>
-      <button class="btn-secondary" onclick="playTestSound()">🔊 Play Sound Test</button>
-      <p id="speaker-status" style="font-size:0.9rem; color:var(--muted); margin-top:8px;">Click to test sound.</p>
-    </div>
+    <label>Live Speech Transcript</label>
+    <div class="live-transcript" id="live-reading-transcript">Click "Start Reading" and begin reading the passage out loud...</div>
 
-    <div class="test-box">
-      <h3>2. Test Microphone</h3>
-      <button class="btn-secondary" onclick="testMic()">🎤 Test Microphone</button>
-      <div class="meter-bar"><div id="meter" class="meter-fill"></div></div>
-      <p id="mic-status" style="font-size:0.9rem; color:var(--muted); margin-top:8px;">Click and speak into your mic.</p>
-    </div>
-
-    <button id="mic-next-btn" onclick="goToStep(3)" disabled>Audio Ready! Next →</button>
+    <button class="btn" id="btn-start-reading" onclick="startReadingProcess()">🎤 Start Reading</button>
+    <button class="btn btn-secondary" id="btn-stop-reading" onclick="finishReadingProcess()" style="display:none;">Finish Reading Passage</button>
   </div>
 
-  <!-- Step 3: Choose Text -->
-  <div id="step-3" class="screen">
-    <h1>Select Your Story 📚</h1>
-    <p>Click on the story title your teacher asked you to read today:</p>
-    <div class="text-grid" id="text-grid-container"></div>
+  <!-- STEP 3: COMPREHENSION QUESTIONS -->
+  <div id="step-3" class="step">
+    <h2>Step 2: Comprehension Questions</h2>
+    <p style="margin-bottom: 16px; color: var(--text-muted);">Listen to or read each question, then speak your answer aloud clearly.</p>
+
+    <div id="questions-container"></div>
+
+    <button class="btn" id="btn-finish-assessment" onclick="finishAssessment()">Complete & View Audit Report</button>
   </div>
 
-  <!-- Step 4: Overall Instructions -->
-  <div id="step-4" class="screen">
-    <h1>Instructions 📖</h1>
-    <p>1. A countdown will begin (3... 2... 1...).</p>
-    <p>2. Read the story out loud in your normal speaking voice.</p>
-    <p>3. Read all the way to the end, then click the red **Done Reading** button.</p>
-    <button onclick="startCountdown()">Start Reading →</button>
-  </div>
+  <!-- STEP 4: TEACHER AUDIT REPORT -->
+  <div id="step-4" class="step">
+    <h1>Teacher Audit Report</h1>
+    
+    <div id="student-summary-header"></div>
 
-  <!-- Step 5: Passive Reading View -->
-  <div id="step-5" class="screen">
-    <div id="countdown-view" class="countdown">3</div>
-    <div id="reading-content" style="display:none; flex-direction:column; gap:15px;">
-      <h2 id="passage-title">Title</h2>
-      <div id="passage-body" class="reading-passage"></div>
-      <button onclick="finishReading()" style="background:#dc2626; align-self:center; margin-top:10px;">Done Reading ⏹</button>
-    </div>
-  </div>
-
-  <!-- Step 6: Transition -->
-  <div id="step-6" class="screen">
-    <h1>Great Job Reading! 🎉</h1>
-    <p>Now you will answer a few quick questions about the story.</p>
-    <p>Listen to the question, then speak your answer or type it in the box below. When finished, click **I'm Done Answering**.</p>
-    <button onclick="startQuestions()">Start Questions →</button>
-  </div>
-
-  <!-- Step 7: Conversational Comprehension -->
-  <div id="step-7" class="screen">
-    <div class="q-card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 id="q-number">Question</h3>
-        <button class="btn-secondary" style="padding:6px 12px; font-size:0.9rem;" onclick="repeatQuestion()">🔊 Hear Question Again</button>
-      </div>
-      <p id="q-text" style="font-size:1.2rem; font-weight:600; margin-top:10px;"></p>
+    <div class="audio-preview">
+      <h3>🎙️ Recorded Student Audio</h3>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Listen to the recording to verify oral accuracy or comprehension responses:</p>
+      <audio id="student-audio-player" controls style="width: 100%;"></audio>
     </div>
 
-    <div id="esol-prompt-banner" class="esol-prompt">
-      💬 Can you tell me a little bit more about that?
-    </div>
+    <h3>Oral Reading Metrics</h3>
+    <table>
+      <tr><th>Metric</th><th>Result</th></tr>
+      <tr><td>Words Per Minute (WPM)</td><td id="res-wpm">-</td></tr>
+      <tr><td>Accuracy Rate</td><td id="res-accuracy">-</td></tr>
+      <tr><td>Potential Miscues Flagged</td><td id="res-miscues-count">-</td></tr>
+    </table>
 
-    <div>
-      <p style="font-weight:600;">Your Answer (Spoken or Typed):</p>
-      <textarea id="q-transcript-input" class="editable-transcript" placeholder="Speak your answer out loud or type here..."></textarea>
-    </div>
+    <h3>Comprehension & Retelling Evaluation</h3>
+    <table id="res-comp-table">
+      <thead>
+        <tr>
+          <th>Question</th>
+          <th>Student Spoken Response</th>
+          <th>Auto-Score</th>
+        </tr>
+      </thead>
+      <tbody id="res-comp-body"></tbody>
+    </table>
 
-    <div style="display:flex; gap:10px;">
-      <button id="answer-done-btn" onclick="handleAnswerDone()">I'm Done Answering ✔</button>
-      <button id="next-q-btn" onclick="nextQuestion()" style="display:none; background:var(--accent);">Next Question →</button>
-    </div>
-  </div>
-
-  <!-- Step 8: Final Student Exit & Teacher Audit Toggle -->
-  <div id="step-8" class="screen">
-    <div id="student-done-view" style="text-align:center; padding:30px 0;">
-      <h1 style="font-size:2.5rem;">All Done! 🌟</h1>
-      <p style="font-size:1.3rem; margin-top:15px;">Thank you for reading today! You did a fantastic job.</p>
-      <p style="color:var(--muted); margin-top:10px;">You may now close this page or hand the Chromebook back to your teacher.</p>
-      <button onclick="toggleTeacherView()" class="btn-secondary" style="margin-top:40px; align-self:center;">🔒 Teacher Dashboard View</button>
-    </div>
-
-    <!-- Teacher Audit & Marking Sheet View -->
-    <div id="teacher-audit-view" style="display:none; flex-direction:column; gap:20px;">
-      <h2>Teacher iRSR Marking & Diagnostic Sheet</h2>
-      <div style="background:#eff6ff; padding:12px; border-radius:8px; border:1px solid #bfdbfe;">
-        <strong>Selected Text:</strong> <span id="aud-text-name">--</span> | <strong>Total Words:</strong> <span id="aud-word-count">--</span> | <strong>Reading Time:</strong> <span id="aud-reading-time">--</span> sec
-      </div>
-      
-      <!-- Miscue Analysis Breakdown -->
-      <div style="background:#fff; border:1px solid #cbd5e1; padding:16px; border-radius:10px;">
-        <h3>1. Miscue Analysis Breakdown</h3>
-        <table class="rsr-table">
-          <tr><th>Miscue Type</th><th>Count</th><th>Specific Recorded Words</th></tr>
-          <tr><td><strong>Substitutions</strong></td><td><input type="number" id="miscue-sub-count" value="2" min="0" style="width:50px;" onchange="recalculateAudit()"></td><td><span id="aud-sub-words">"trampling" for "tramping"</span></td></tr>
-          <tr><td><strong>Omissions (Skipped)</strong></td><td><input type="number" id="miscue-om-count" value="1" min="0" style="width:50px;" onchange="recalculateAudit()"></td><td><span id="aud-om-words">skipped "deep"</span></td></tr>
-          <tr><td><strong>Insertions</strong></td><td><input type="number" id="miscue-ins-count" value="0" min="0" style="width:50px;" onchange="recalculateAudit()"></td><td><span>--</span></td></tr>
-        </table>
-      </div>
-
-      <!-- Recorded Student Answers & Scoring -->
-      <div style="background:#fff; border:1px solid #cbd5e1; padding:16px; border-radius:10px;">
-        <h3>2. Student Comprehension Answers & Teacher Scoring</h3>
-        <p style="font-size:0.9rem; color:var(--muted); margin-bottom:12px;">Review student's exact spoken/typed responses against target criteria and edit points assigned:</p>
-        <div id="student-answers-audit-list"></div>
-      </div>
-
-      <!-- Score Calculations & Math Formulas -->
-      <div style="background:#fff; border:1px solid #cbd5e1; padding:16px; border-radius:10px;">
-        <h3>3. iRSR Diagnostic Calculations</h3>
-        
-        <p><strong>Decoding Score:</strong></p>
-        <div class="math-box" id="math-dec">Decoding Calculation...</div>
-
-        <p style="margin-top:10px;"><strong>Accuracy Percentage:</strong></p>
-        <div class="math-box" id="math-acc">Accuracy Calculation...</div>
-
-        <p style="margin-top:10px;"><strong>Oral Reading Rate (WCPM):</strong></p>
-        <div class="math-box" id="math-wcpm">WCPM Calculation...</div>
-
-        <p style="margin-top:10px;"><strong>Comprehension Score:</strong></p>
-        <div class="math-box" id="math-comp">Comprehension Calculation...</div>
-      </div>
-
-      <!-- Instructional Next Step & Profile -->
-      <div style="background:#f1f5f9; padding:18px; border-radius:10px; border-left:6px solid var(--primary-light);">
-        <h3>Assigned Reader Profile</h3>
-        <p id="aud-profile" style="font-weight:600; color:var(--primary);"></p>
-        <hr style="margin:12px 0; border:none; border-top:1px solid #cbd5e1;">
-        <h3>Instructional Next Step Recommendation</h3>
-        <p id="aud-nextstep" style="font-weight:600; color:#047857;"></p>
-      </div>
-
-      <button onclick="toggleTeacherView()" class="btn-secondary">← Back to Student Complete Screen</button>
-    </div>
-  </div>
-
-  <div class="nav-footer">
-    <span class="step-indicator" id="step-indicator">Step 1 of 8</span>
+    <button class="btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+    <button class="btn btn-secondary" onclick="location.reload()">Start New Assessment</button>
   </div>
 
 </div>
 
 <script>
-  let currentStep = 1;
-  let selectedTextKey = 'aotea';
-  let selectedTextData = null;
-  let currentQIndex = 0;
-  let isFollowupStage = false;
-  let recognition = null;
-  let readingStartTime = 0;
-  let totalReadingSeconds = 60;
-  let studentResponses = [];
-
-  const sampleTexts = {
+  // PASSAGE DATA & QUESTION KEYS
+  const STORIES = {
     aotea: {
-      title: "Life on Aotea",
-      fullText: "Growing up on Aotea Great Barrier Island is fun. There's plenty to do: fishing, swimming, beachcombing, tramping. But there are challenges too. The island is off-grid, so people have to find their own water and make their own power. Some students from Okiwi School talk about life on the island.\n\nDylan\nAotea is about 90 kilometres from Auckland. I'd rather fly than go there on the ferry because I don't like being on deep, deep water. It also takes over four hours by boat, but only thirty minutes on a plane. It's expensive to buy food on Aotea because it's shipped from Auckland. Luckily, my family has a vegetable garden. We grow peppers, passionfruit, huge pumpkins - and my favourite, watermelon. We also grow tomatoes. When we have too many, we take them to school for the kids to eat.",
-      totalWords: 139,
+      title: "Aotea (Great Barrier Island)",
+      text: "Dylan lives on Aotea, also known as Great Barrier Island. To get to Auckland, his family either takes a short flight or a long ferry ride across the sea. Dylan prefers flying because he gets nervous on deep water. Living on an island means energy comes from solar panels and water comes from rain tanks. Because food shipped from the mainland can be expensive, Dylan's family grows a big vegetable garden.",
       questions: [
-        { type: "Ret", q: "Can you retell the main points of the story in detail?", target: "Main points retelling (3 pts)" },
-        { type: "Lit", q: "How far is Aotea from Auckland?", target: "About 90km from Auckland" },
-        { type: "Lit", q: "Name 2 activities people can do on the island.", target: "Fishing, beachcombing, tramping, swimming" },
-        { type: "Lit", q: "Why does Dylan prefer to fly instead of taking the ferry?", target: "He doesn't like being on deep water" },
-        { type: "Voc", q: "What does 'off-grid' mean?", target: "Not connected to main power or water systems" },
-        { type: "Inf", q: "How does having a vegetable garden help Dylan's family?", target: "Expensive to buy food; growing vegetables is cheaper" },
-        { type: "Rea", q: "Do you think living on Aotea would be easy or hard? Why?", target: "Reasoning answer with justification" },
-        { type: "Rea", q: "Would you like to live on Aotea Great Barrier Island? Why or why not?", target: "Reasoning answer with personal preference" }
+        { id: "q1", type: "Retelling", text: "Retell the main points of the story in detail.", points: 3 },
+        { id: "q2", type: "Literal", text: "How far or how do people travel from Aotea to Auckland?", key: ["flight", "plane", "ferry", "boat", "90"] },
+        { id: "q3", type: "Literal", text: "Name 2 activities or ways island living works on Aotea.", key: ["solar", "rain", "garden", "vegetable", "ferry", "flight"] },
+        { id: "q4", type: "Literal", text: "Why does Dylan prefer to fly instead of taking the ferry?", key: ["deep water", "nervous", "water", "sea"] },
+        { id: "q5", type: "Vocabulary", text: "What does living off-grid or using solar/rain tanks mean?", key: ["not connected", "power", "water", "own", "panels", "rain"] },
+        { id: "q6", type: "Inference", text: "How does having a vegetable garden help Dylan’s family?", key: ["expensive", "cheaper", "cost", "save", "food"] },
+        { id: "q7", type: "Evaluative", text: "Do you think living on Aotea would be easy or hard? Why?", key: ["easy", "hard", "because"] },
+        { id: "q8", type: "Evaluative", text: "Would you like to live on Aotea Great Barrier Island? Why or why not?", key: ["yes", "no", "because"] }
       ]
     },
     funrun: {
       title: "The Fun Run",
-      fullText: "Sam is running in a fun run, and he wants to win. His pals, Poppy, Tammy, and Bobby, are chatting. They are all planning on running in the fun run. Bobby says that he does not want to win. He just wants to have fun. Sam is set to go, but his chest is thumping. Denny cracks the blocks, and the run begins. Sam's mum claps as he runs past.\n\nOh no! Poppy trips! Tammy stops and runs back to help. \"You can do it, Poppy!\" says Tammy as she grabs Poppy's hand. Tammy and Poppy push on. Bobby is at the back of the run, jogging and grinning. Sam is getting so hot as he is running. Sam is the best at running and pushes to win. Yes! Sam did it. He won the fun run. Mum hugs Sam and Bobby. Poppy and Tammy pat Sam on the back.",
-      totalWords: 150,
+      text: "Sam stood at the starting line, his heart thumping in his chest. Today was the school fun run, and everyone was excited. When the whistle blew, the runners surged forward. Halfway through the race, Poppy tripped over a tree root and fell onto the grass. Tammy stopped running right away to help her up, even though it meant losing her lead. Behind them, Bobby ran with a wide smile, just enjoying the fun.",
       questions: [
-        { type: "Ret", q: "Can you retell the main points in detail?", target: "Main points retelling (3 pts)" },
-        { type: "Lit", q: "What happens to Poppy during the run?", target: "She trips, falls over" },
-        { type: "Voc", q: "What does 'thumping' mean when describing Sam's chest?", target: "His heart is racing" },
-        { type: "Inf", q: "Why is Bobby smiling even though he is at the back?", target: "He is having fun / didn't want to win" },
-        { type: "Rea", q: "Do you think Tammy made the right choice to stop and help Poppy? Why/Why not?", target: "Reasoning answer with justification" }
+        { id: "q1", type: "Retelling", text: "Retell the main points of the story in detail.", points: 3 },
+        { id: "q2", type: "Literal", text: "What happens to Poppy during the run?", key: ["tripped", "fell", "root", "grass", "hurt"] },
+        { id: "q3", type: "Vocabulary", text: "What does 'thumping' mean when describing Sam’s chest?", key: ["heart", "beating", "fast", "racing", "pounding"] },
+        { id: "q4", type: "Inference", text: "Why is Bobby smiling even though he is at the back?", key: ["having fun", "enjoying", "didn't care", "winning", "happy"] },
+        { id: "q5", type: "Evaluative", text: "Do you think Tammy made the right choice to stop and help Poppy? Why or why not?", key: ["yes", "no", "right", "wrong", "because"] }
       ]
     }
   };
 
-  function renderTextSelector() {
-    const grid = document.getElementById('text-grid-container');
-    grid.innerHTML = '';
-    for (let key in sampleTexts) {
-      grid.innerHTML += `
-        <div class="text-card" onclick="selectText('${key}')">
-          <h3>${sampleTexts[key].title}</h3>
-          <p><small>${sampleTexts[key].totalWords} Words • ${sampleTexts[key].questions.length} Questions</small></p>
-        </div>
-      `;
-    }
-  }
-  renderTextSelector();
+  // APP STATE
+  let selectedStory = null;
+  let studentName = "";
+  let readingStartTime = null;
+  let readingEndTime = null;
+  let readingDurationSec = 0;
+  
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let recordedAudioUrl = null;
 
-  function goToStep(step) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(`step-${step}`).classList.add('active');
-    currentStep = step;
-    document.getElementById('step-indicator').innerText = `Step ${step} of 8`;
-  }
+  let speechRecognition = null;
+  let fullReadingTranscript = "";
+  let questionTranscripts = {};
+  let currentQIndex = -1;
 
-  function playTestSound() {
-    if ('speechSynthesis' in window) {
-      let msg = new SpeechSynthesisUtterance("Speaker sound test successful!");
-      window.speechSynthesis.speak(msg);
-      document.getElementById('speaker-status').innerText = "✅ Sound played!";
-      document.getElementById('speaker-status').style.color = "#10b981";
-    }
-  }
+  // INITIALIZATION
+  function goToStep2() {
+    studentName = document.getElementById("student-name").value.trim() || "Student";
+    const storyKey = document.getElementById("story-select").value;
+    selectedStory = STORIES[storyKey];
 
-  function testMic() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      document.getElementById('mic-status').innerText = "✅ Microphone active and working!";
-      document.getElementById('mic-status').style.color = "#10b981";
-      document.getElementById('meter').style.width = "90%";
-      document.getElementById('mic-next-btn').disabled = false;
-      initSpeechRecognition();
-    }).catch(err => {
-      document.getElementById('mic-status').innerText = "🔒 Mic access blocked. Please allow permissions in browser.";
-      document.getElementById('mic-status').style.color = "#ef4444";
-    });
+    // Render passage
+    const passageContainer = document.getElementById("passage-container");
+    const words = selectedStory.text.split(" ");
+    passageContainer.innerHTML = words.map((w, idx) => `<span class="passage-word" id="pword-${idx}">${w}</span>`).join(" ");
+
+    document.getElementById("step-1").classList.remove("active");
+    document.getElementById("step-2").classList.add("active");
+
+    initAudioRecording();
   }
 
-  function initSpeechRecognition() {
-    if (('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) && !recognition) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-
-      recognition.onresult = (event) => {
-        let currentInput = document.getElementById('q-transcript-input');
-        let existingText = currentInput.getAttribute('data-base-text') || '';
-        let newSpeech = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          newSpeech += event.results[i][0].transcript;
-        }
-        currentInput.value = (existingText + ' ' + newSpeech).trim();
+  // AUDIO RECORDING SETUP
+  async function initAudioRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.push(e.data);
       };
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        recordedAudioUrl = URL.createObjectURL(audioBlob);
+        document.getElementById("student-audio-player").src = recordedAudioUrl;
+      };
+    } catch (err) {
+      console.warn("Audio recording error/permission denied:", err);
     }
   }
 
-  function selectText(key) {
-    selectedTextKey = key;
-    selectedTextData = sampleTexts[key];
-    studentResponses = [];
-    goToStep(4);
+  // SPEECH RECOGNITION / READING
+  function startReadingProcess() {
+    document.getElementById("btn-start-reading").style.display = "none";
+    document.getElementById("btn-stop-reading").style.display = "inline-block";
+    document.getElementById("mic-status").innerText = "Status: Listening...";
+
+    if (mediaRecorder && mediaRecorder.state === "inactive") {
+      audioChunks = [];
+      mediaRecorder.start();
+    }
+
+    readingStartTime = new Date();
+    
+    // Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      speechRecognition = new SpeechRecognition();
+      speechRecognition.continuous = true;
+      speechRecognition.interimResults = true;
+      speechRecognition.lang = 'en-NZ'; // NZ English tuning
+
+      speechRecognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript + " ";
+        }
+        fullReadingTranscript = transcript.trim();
+        document.getElementById("live-reading-transcript").innerText = fullReadingTranscript;
+        alignAndHighlightPassage(fullReadingTranscript);
+      };
+
+      speechRecognition.start();
+    } else {
+      document.getElementById("live-reading-transcript").innerText = "Speech recognition is not supported on this browser version.";
+    }
   }
 
-  function startCountdown() {
-    goToStep(5);
-    let count = 3;
-    const cdBox = document.getElementById('countdown-view');
-    cdBox.style.display = 'block';
-    document.getElementById('reading-content').style.display = 'none';
+  function finishReadingProcess() {
+    readingEndTime = new Date();
+    readingDurationSec = Math.max(1, Math.round((readingEndTime - readingStartTime) / 1000));
+    
+    if (speechRecognition) {
+      speechRecognition.stop();
+    }
 
-    let timer = setInterval(() => {
-      count--;
-      if (count > 0) {
-        cdBox.innerText = count;
-      } else {
-        clearInterval(timer);
-        cdBox.style.display = 'none';
-        document.getElementById('reading-content').style.display = 'flex';
-        document.getElementById('passage-title').innerText = selectedTextData.title;
-        document.getElementById('passage-body').innerText = selectedTextData.fullText;
-        readingStartTime = Date.now();
+    renderQuestionsStep();
+    document.getElementById("step-2").classList.remove("active");
+    document.getElementById("step-3").classList.add("active");
+  }
+
+  // ALIGNMENT / MISCUE HIGHLIGHTING
+  function alignAndHighlightPassage(transcript) {
+    const originalWords = selectedStory.text.split(" ");
+    const spokenWords = transcript.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
+
+    originalWords.forEach((word, idx) => {
+      const cleanWord = word.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const elem = document.getElementById(`pword-${idx}`);
+      if (!elem) return;
+
+      // Reset classes
+      elem.className = "passage-word";
+
+      if (spokenWords.length > 0) {
+        if (!spokenWords.includes(cleanWord)) {
+          // If spoken stream has progressed past this word point, mark omission
+          if (spokenWords.length > idx + 2) {
+            elem.classList.add("miscue-omission");
+          }
+        }
       }
-    }, 1000);
-  }
-
-  function finishReading() {
-    totalReadingSeconds = Math.max(1, Math.round((Date.now() - readingStartTime) / 1000));
-    goToStep(6);
-  }
-
-  function startQuestions() {
-    currentQIndex = 0;
-    goToStep(7);
-    loadQuestion(currentQIndex);
-  }
-
-  function loadQuestion(idx) {
-    isFollowupStage = false;
-    const qObj = selectedTextData.questions[idx];
-    document.getElementById('q-number').innerText = `Question ${idx + 1} of ${selectedTextData.questions.length} (${qObj.type})`;
-    document.getElementById('q-text').innerText = qObj.q;
-    
-    const input = document.getElementById('q-transcript-input');
-    input.value = "";
-    input.setAttribute('data-base-text', '');
-
-    document.getElementById('esol-prompt-banner').style.display = 'none';
-    document.getElementById('answer-done-btn').style.display = 'inline-block';
-    document.getElementById('next-q-btn').style.display = 'none';
-
-    // Pause mic while TTS plays to prevent repeated mic permission popups
-    if (recognition) { try { recognition.stop(); } catch(e){} }
-    
-    speakText(qObj.q, () => {
-      if (recognition) { try { recognition.start(); } catch(e){} }
     });
   }
 
-  function repeatQuestion() {
-    if (recognition) { try { recognition.stop(); } catch(e){} }
-    speakText(document.getElementById('q-text').innerText, () => {
-      if (recognition) { try { recognition.start(); } catch(e){} }
-    });
-  }
+  // COMPREHENSION STEP
+  function renderQuestionsStep() {
+    const container = document.getElementById("questions-container");
+    container.innerHTML = "";
 
-  function speakText(text, onEndCallback) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      let speech = new SpeechSynthesisUtterance(text);
-      speech.rate = 0.88;
-      if (onEndCallback) speech.onend = onEndCallback;
-      window.speechSynthesis.speak(speech);
-    }
-  }
-
-  function handleAnswerDone() {
-    const input = document.getElementById('q-transcript-input');
-    const response = input.value.trim();
-    const wordCount = response ? response.split(/\s+/).length : 0;
-
-    if (wordCount < 4 && !isFollowupStage) {
-      isFollowupStage = true;
-      input.setAttribute('data-base-text', response);
-      document.getElementById('esol-prompt-banner').style.display = 'block';
-      
-      if (recognition) { try { recognition.stop(); } catch(e){} }
-      speakText("Can you tell me a little bit more about that?", () => {
-        if (recognition) { try { recognition.start(); } catch(e){} }
-      });
-    } else {
-      if (recognition) { try { recognition.stop(); } catch(e){} }
-      document.getElementById('esol-prompt-banner').style.display = 'none';
-      document.getElementById('answer-done-btn').style.display = 'none';
-      document.getElementById('next-q-btn').style.display = 'inline-block';
-      
-      studentResponses[currentQIndex] = response || "(No answer recorded)";
-    }
-  }
-
-  function nextQuestion() {
-    currentQIndex++;
-    if (currentQIndex < selectedTextData.questions.length) {
-      loadQuestion(currentQIndex);
-    } else {
-      goToStep(8);
-      recalculateAudit();
-    }
-  }
-
-  function recalculateAudit() {
-    const totalWords = selectedTextData.totalWords;
-    const subCount = parseInt(document.getElementById('miscue-sub-count').value) || 0;
-    const omCount = parseInt(document.getElementById('miscue-om-count').value) || 0;
-    const totalErrors = subCount + omCount;
-
-    const decodingScore = Math.max(0, totalWords - totalErrors);
-    const accuracyPct = ((decodingScore / totalWords) * 100).toFixed(1);
-    const wcpm = Math.round((decodingScore / totalReadingSeconds) * 60);
-
-    document.getElementById('aud-text-name').innerText = selectedTextData.title;
-    document.getElementById('aud-word-count').innerText = totalWords;
-    document.getElementById('aud-reading-time').innerText = totalReadingSeconds;
-
-    // Render Student Comprehension Answers List for Teacher Grading
-    const qContainer = document.getElementById('student-answers-audit-list');
-    qContainer.innerHTML = '';
-    
-    let pointsEarned = 0;
-    let maxPointsPossible = selectedTextData.questions.length;
-
-    selectedTextData.questions.forEach((qObj, i) => {
-      const studentAns = studentResponses[i] || "(No response captured)";
-      qContainer.innerHTML += `
-        <div class="q-audit-item">
-          <strong>Q${i+1} (${qObj.type}): ${qObj.q}</strong><br>
-          <small style="color:var(--muted);">Target Answer Guide: ${qObj.target}</small>
-          <p style="margin:6px 0; background:#fff; padding:8px; border-radius:6px; border:1px solid #e2e8f0;">
-            <strong>Student Said/Typed:</strong> "${studentAns}"
-          </p>
+    selectedStory.questions.forEach((q, idx) => {
+      container.innerHTML += `
+        <div class="q-card">
+          <div class="q-type">${q.type} Question</div>
+          <h3>${q.text}</h3>
+          <div class="live-transcript" id="q-transcript-${idx}">Click speak to answer...</div>
+          <button class="btn btn-secondary" onclick="recordQuestionAnswer(${idx})">🎤 Speak Answer</button>
         </div>
       `;
-      pointsEarned += (studentAns !== "(No response captured)" ? 1 : 0);
     });
-
-    const compPct = Math.round((pointsEarned / maxPointsPossible) * 100);
-
-    document.getElementById('math-dec').innerText = `${totalWords} Total Words - ${totalErrors} Errors = ${decodingScore} Words Decoded`;
-    document.getElementById('math-acc').innerText = `(${decodingScore} Decoded / ${totalWords} Words) × 100 = ${accuracyPct}% (Target: ≥ 95%)`;
-    document.getElementById('math-wcpm').innerText = `(${decodingScore} Words / ${totalReadingSeconds} Sec) × 60 = ${wcpm} WCPM`;
-    document.getElementById('math-comp').innerText = `(${pointsEarned} / ${maxPointsPossible} Questions Answered) = ${compPct}% (Target: ≥ 80%)`;
-
-    let profileText = "";
-    let nextStepText = "";
-
-    if (accuracyPct >= 95 && compPct >= 80) {
-      profileText = "Profile 4: Secure Across All Areas (High Accuracy / High Comp / High ORF)";
-      nextStepText = "Extend to next concept / year-level text: Student meets/exceeds accuracy (≥95%), comprehension (≥80%), and fluency targets.";
-    } else if (accuracyPct >= 95 && compPct < 80) {
-      profileText = "Profile 3: High Accuracy / Low Comprehension";
-      nextStepText = "Consolidate within current text level: Focus on vocabulary development, language structures, and inferential reasoning strategies.";
-    } else if (accuracyPct < 95 && compPct >= 80) {
-      profileText = "Profile 2: Low Accuracy / High Comprehension";
-      nextStepText = "Consolidate within current text level: Focus on phonic decoding patterns and word-level accuracy.";
-    } else {
-      profileText = "Profile 1: Needs Targeted Support (Low Accuracy / Low Comp)";
-      nextStepText = "Consolidate within lower text level: Re-evaluate decoding foundational skills and offer structured scaffolding.";
-    }
-
-    document.getElementById('aud-profile').innerText = profileText;
-    document.getElementById('aud-nextstep').innerText = nextStepText;
   }
 
-  function toggleTeacherView() {
-    const studentView = document.getElementById('student-done-view');
-    const teacherView = document.getElementById('teacher-audit-view');
-    if (teacherView.style.display === 'none') {
-      teacherView.style.display = 'flex';
-      studentView.style.display = 'none';
-      recalculateAudit();
-    } else {
-      teacherView.style.display = 'none';
-      studentView.style.display = 'block';
+  function recordQuestionAnswer(qIndex) {
+    const targetDiv = document.getElementById(`q-transcript-${qIndex}`);
+    targetDiv.innerText = "Listening for answer...";
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const qRec = new SpeechRecognition();
+    qRec.lang = 'en-NZ';
+    qRec.interimResults = false;
+
+    qRec.onresult = (e) => {
+      const ans = e.results[0][0].transcript;
+      questionTranscripts[qIndex] = ans;
+      targetDiv.innerText = `Spoken: "${ans}"`;
+    };
+
+    qRec.start();
+  }
+
+  // FINAL AUDIT GENERATION
+  function finishAssessment() {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
     }
+
+    // Calculations
+    const totalWords = selectedStory.text.split(" ").length;
+    const wpm = Math.round((totalWords / readingDurationSec) * 60);
+
+    // Count miscues from highlighted UI elements
+    const omissions = document.querySelectorAll(".miscue-omission").length;
+    const accuracy = Math.max(0, Math.round(((totalWords - omissions) / totalWords) * 100));
+
+    // Render Header
+    document.getElementById("student-summary-header").innerHTML = `
+      <p><strong>Student:</strong> ${studentName}</p>
+      <p><strong>Story:</strong> ${selectedStory.title}</p>
+      <p><strong>Total Reading Time:</strong> ${readingDurationSec} seconds</p>
+    `;
+
+    document.getElementById("res-wpm").innerText = `${wpm} WPM`;
+    document.getElementById("res-accuracy").innerText = `${accuracy}%`;
+    document.getElementById("res-miscues-count").innerText = `${omissions} potential omissions/miscues`;
+
+    // Render Comprehension Evaluation
+    const compBody = document.getElementById("res-comp-body");
+    compBody.innerHTML = "";
+
+    selectedStory.questions.forEach((q, idx) => {
+      const studentAns = questionTranscripts[idx] || "No response recorded";
+      const evaluation = evaluateAnswer(q, studentAns);
+
+      compBody.innerHTML += `
+        <tr>
+          <td><strong>[${q.type}]</strong> ${q.text}</td>
+          <td>"${studentAns}"</td>
+          <td><span style="color: ${evaluation.color}; font-weight: bold;">${evaluation.status}</span></td>
+        </tr>
+      `;
+    });
+
+    document.getElementById("step-3").classList.remove("active");
+    document.getElementById("step-4").classList.add("active");
+  }
+
+  // MULTI-CONCEPT EVALUATION LOGIC
+  function evaluateAnswer(q, answer) {
+    const clean = answer.toLowerCase().trim();
+    const wordCount = clean.split(/\s+/).filter(w => w.length > 0).length;
+
+    // Rule 1: Automatic Fail on Filler / Very Short
+    if (wordCount < 2 || clean.includes("dont know") || clean.includes("don't know") || clean === "no idea") {
+      return { status: "Incorrect (Insufficient / Filler)", color: "var(--danger)" };
+    }
+
+    // Rule 2: Evaluative Questions Require Reason Connectors
+    if (q.type === "Evaluative") {
+      const hasStance = clean.includes("yes") || clean.includes("no") || clean.includes("easy") || clean.includes("hard") || clean.includes("right") || clean.includes("wrong");
+      const hasReason = clean.includes("because") || clean.includes("so") || clean.includes("since") || wordCount >= 5;
+      
+      if (hasStance && hasReason) {
+        return { status: "Correct (Valid Reason)", color: "var(--success)" };
+      } else {
+        return { status: "Partial / Check (Missing Reason)", color: "var(--warning)" };
+      }
+    }
+
+    // Rule 3: Multi-Key Matching
+    if (q.key) {
+      let matches = 0;
+      q.key.forEach(k => {
+        if (clean.includes(k.toLowerCase())) matches++;
+      });
+
+      if (matches >= 2 || (matches >= 1 && wordCount >= 6)) {
+        return { status: "Correct", color: "var(--success)" };
+      } else if (matches === 1) {
+        return { status: "Partial", color: "var(--warning)" };
+      }
+    }
+
+    return { status: "Incorrect", color: "var(--danger)" };
   }
 </script>
 
