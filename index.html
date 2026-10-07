@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>iDeaL® Oral Reading Assessment</title>
+  <title>iDeaL® Oral Reading & Comprehension Assessment</title>
   <style>
     :root {
       --primary: #2563eb;
@@ -12,145 +12,266 @@
       --card-bg: #ffffff;
       --text: #0f172a;
       --text-muted: #475569;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
       --success: #16a34a;
       --danger: #dc2626;
       --warning: #d97706;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); color: var(--text); padding: 20px; line-height: 1.5; }
-    .container { max-width: 800px; margin: 0 auto; background: var(--card-bg); padding: 28px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: var(--bg-color); 
+      color: var(--text); 
+      padding: 20px; 
+      line-height: 1.5;
+    }
+    
+    .container { 
+      max-width: 850px; 
+      margin: 0 auto; 
+      background: var(--card-bg); 
+      padding: 32px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+    }
+
     h1, h2, h3 { margin-bottom: 16px; color: var(--text); }
     .step { display: none; }
     .step.active { display: block; }
-    
-    label { display: block; margin-bottom: 8px; font-weight: 600; }
-    input[type="text"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 20px; font-size: 16px; }
-    
-    .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
-    .btn:hover { background: var(--primary-hover); }
-    .btn-secondary { background: #64748b; }
-    .btn-secondary:hover { background: #475569; }
 
-    /* Story Selection Cards / Buttons */
-    .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; margin-bottom: 20px; }
-    .story-card { border: 2px solid var(--border); padding: 20px; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: #fff; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 16px; }
+    input[type="text"], textarea { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid var(--border); 
+      border-radius: 8px; 
+      font-size: 16px; 
+      font-family: inherit;
+    }
+    textarea { min-height: 100px; resize: vertical; margin-top: 8px; }
+
+    .btn { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 8px; 
+      font-size: 16px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #64748b; color: white; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-success { background: var(--success); }
+    .btn-success:hover { background: #15803d; }
+
+    /* SCREEN 1: STORY CARDS */
+    .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0 28px 0; }
+    .story-card { 
+      border: 2px solid var(--border); 
+      padding: 28px 20px; 
+      border-radius: 12px; 
+      text-align: center; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      background: #fff;
+    }
     .story-card:hover { border-color: var(--primary); background: #f0f6ff; }
-    .story-card.selected { border-color: var(--primary); background: #eff6ff; box-shadow: 0 0 0 2px var(--primary); }
-    .story-card h3 { margin-bottom: 6px; color: var(--primary); }
+    .story-card.selected { border-color: var(--primary); background: #eff6ff; box-shadow: 0 0 0 3px rgba(37,99,235,0.25); }
+    .story-card h3 { margin-bottom: 8px; color: var(--primary); font-size: 22px; }
     .story-card p { font-size: 14px; color: var(--text-muted); }
 
-    .passage-box { font-size: 20px; line-height: 1.8; padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: #fafafa; margin-bottom: 20px; user-select: none; }
-    .passage-word { display: inline-block; margin-right: 4px; padding: 2px 4px; border-radius: 4px; }
-    .passage-word.miscue-sub { background-color: #fef08a; color: #854d0e; text-decoration: line-through; }
-    .passage-word.miscue-omission { background-color: #fecaca; color: #991b1b; }
-    
-    .status-banner { padding: 12px; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-    .live-transcript { min-height: 80px; padding: 12px; border: 1px dashed var(--border); border-radius: 6px; background: #f1f5f9; font-style: italic; color: var(--text-muted); margin-bottom: 16px; }
+    /* SCREEN 2: MIC METER */
+    .mic-meter-box { height: 20px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin: 16px 0 24px 0; border: 1px solid var(--border); }
+    .mic-meter-bar { height: 100%; width: 0%; background: var(--success); transition: width 0.1s ease; }
 
-    .q-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff; }
-    .q-type { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 4px; }
+    /* SCREEN 3: NO-SCROLL READING VIEW */
+    .passage-box-clean { 
+      font-size: 24px; 
+      line-height: 1.8; 
+      padding: 32px; 
+      border: 2px solid var(--border); 
+      border-radius: 12px; 
+      background: #ffffff; 
+      margin: 20px 0 28px 0; 
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+      max-height: 400px;
+      overflow: hidden; /* Zero scrolling */
+      display: flex;
+      align-items: center;
+    }
+    .status-banner { 
+      padding: 12px 20px; 
+      border-radius: 8px; 
+      background: #e0f2fe; 
+      color: #0369a1; 
+      font-weight: 600; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+
+    /* SCREEN 4: QUESTION BY QUESTION FLOW */
+    .q-card { border: 1px solid var(--border); border-radius: 12px; padding: 28px; background: #fff; margin: 20px 0; }
+    .q-type-badge { font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+    .prompt-box { background: #fef3c7; border: 1px solid #fde047; color: #854d0e; padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-weight: 500; display: none; }
+
+    /* SCREEN 5: AUDIT DASHBOARD & METRICS */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; }
+    .metric-card { background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
+    .metric-card .val { font-size: 26px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+    .metric-card .lbl { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+    .audio-preview { margin: 24px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; }
+    .math-breakdown { background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 14px; margin: 12px 0 24px 0; border: 1px solid var(--border); line-height: 1.6; }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 15px; }
+    th, td { border: 1px solid var(--border); padding: 12px; text-align: left; vertical-align: top; }
+    th { background: #f1f5f9; font-weight: 700; }
     
-    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-    th { background: #f1f5f9; }
-    
-    .audio-preview { margin: 20px 0; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
+    .tick-pass { color: var(--success); font-weight: 800; font-size: 18px; }
+    .tick-warn { color: var(--warning); font-weight: 800; font-size: 18px; }
+    .tick-fail { color: var(--danger); font-weight: 800; font-size: 18px; }
   </style>
 </head>
 <body>
 
 <div class="container">
   
-  <!-- STEP 1: SETUP (WITH STORY BUTTONS RESTORED) -->
+  <!-- SCREEN 1: HOME & STORY SELECTION -->
   <div id="step-1" class="step active">
     <h1>iDeaL® Oral Reading Assessment</h1>
+    <p style="color: var(--text-muted); margin-bottom: 24px;">Select a story passage and enter student details to begin.</p>
+    
     <label for="student-name">Student Name</label>
     <input type="text" id="student-name" placeholder="Enter student name...">
 
-    <label>Select Assessment Story</label>
+    <label style="margin-top: 20px;">Select Assessment Story</label>
     <div class="story-grid">
-      <div class="story-card" id="card-aotea" onclick="selectStoryCard('aotea')">
+      <div class="story-card" id="card-aotea" onclick="selectStory('aotea')">
         <h3>Aotea</h3>
         <p>Great Barrier Island</p>
       </div>
-      <div class="story-card" id="card-funrun" onclick="selectStoryCard('funrun')">
+      <div class="story-card" id="card-funrun" onclick="selectStory('funrun')">
         <h3>The Fun Run</h3>
         <p>School Race Story</p>
       </div>
     </div>
 
-    <button class="btn" id="btn-continue-step1" onclick="goToStep2()" style="display:none; width: 100%;">Start Assessment →</button>
+    <button class="btn" id="btn-to-mic" onclick="goToStep2()" style="display:none; width: 100%;">Continue to Mic Check →</button>
   </div>
 
-  <!-- STEP 2: READING PASSAGE -->
+  <!-- SCREEN 2: MIC TEST & LEVEL CHECK -->
   <div id="step-2" class="step">
+    <h2>Microphone & Audio Check</h2>
+    <p style="color: var(--text-muted); margin-bottom: 16px;">Click the button below and speak out loud to confirm your microphone is working.</p>
+    
+    <button class="btn btn-secondary" onclick="testMicPermissions()">🎤 Test Microphone</button>
+    <div class="mic-meter-box"><div class="mic-meter-bar" id="mic-bar"></div></div>
+    <div id="mic-test-status" style="font-weight: 600; color: var(--primary); margin-bottom: 24px;">Status: Waiting for mic test...</div>
+
+    <button class="btn btn-success" id="btn-to-reading" onclick="goToStep3()" style="display:none;">Start Reading Step →</button>
+  </div>
+
+  <!-- SCREEN 3: NO-SCROLL CLEAN READING VIEW -->
+  <div id="step-3" class="step">
     <h2>Step 1: Reading Aloud</h2>
     <div class="status-banner">
-      <span id="mic-status">Status: Ready</span>
+      <span id="reading-status">Ready to start</span>
       <span id="timer-display">Time: 0s</span>
     </div>
 
-    <div class="passage-box" id="passage-container"></div>
-    
-    <label>Live Speech Transcript</label>
-    <div class="live-transcript" id="live-reading-transcript">Click "Start Reading" and begin reading the passage out loud...</div>
+    <!-- Clean view: passage only, no scrollbar -->
+    <div class="passage-box-clean" id="passage-text"></div>
 
-    <button class="btn" id="btn-start-reading" onclick="startReadingProcess()">🎤 Start Reading</button>
-    <button class="btn btn-secondary" id="btn-stop-reading" onclick="finishReadingProcess()" style="display:none;">Finish Reading Passage</button>
+    <button class="btn btn-success" id="btn-start-reading" onclick="startReading()">🎤 Start Reading</button>
+    <button class="btn btn-secondary" id="btn-stop-reading" onclick="finishReading()" style="display:none;">Finish Reading Passage</button>
   </div>
 
-  <!-- STEP 3: COMPREHENSION QUESTIONS -->
-  <div id="step-3" class="step">
-    <h2>Step 2: Comprehension Questions</h2>
-    <p style="margin-bottom: 16px; color: var(--text-muted);">Listen to or read each question, then speak your answer aloud clearly.</p>
-
-    <div id="questions-container"></div>
-
-    <button class="btn" id="btn-finish-assessment" onclick="finishAssessment()">Complete & View Audit Report</button>
-  </div>
-
-  <!-- STEP 4: TEACHER AUDIT REPORT -->
+  <!-- SCREEN 4: QUESTION BY QUESTION FLOW -->
   <div id="step-4" class="step">
-    <h1>Teacher Audit Report</h1>
-    
-    <div id="student-summary-header"></div>
+    <h2>Step 2: Comprehension Questions</h2>
+    <p style="color: var(--text-muted); margin-bottom: 8px;">Question <span id="q-current-num">1</span> of <span id="q-total-num">5</span></p>
 
-    <div class="audio-preview">
-      <h3>🎙️ Recorded Student Audio</h3>
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Listen to the recording to verify oral accuracy or comprehension responses:</p>
-      <audio id="student-audio-player" controls style="width: 100%;"></audio>
+    <div class="q-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+        <span id="q-type-badge" class="q-type-badge">Literal</span>
+        <button class="btn btn-secondary" onclick="readQuestionAloud()" style="padding: 6px 12px; font-size: 14px;">🔊 Read Question Aloud</button>
+      </div>
+      
+      <h3 id="q-text-display" style="font-size: 20px; line-height: 1.4;">Question text...</h3>
+
+      <!-- Elaboration prompt alert -->
+      <div id="prompt-box" class="prompt-box">💡 Could you tell me a little bit more or explain why?</div>
+
+      <div style="margin-top:20px;">
+        <button class="btn btn-secondary" id="btn-q-mic" onclick="recordQuestionResponse()">🎤 Speak Answer</button>
+        <label style="margin-top: 16px; font-size: 14px;">Spoken or Typed Answer (Editable):</label>
+        <textarea id="q-answer-input" placeholder="Speak your answer or type here..."></textarea>
+      </div>
     </div>
 
-    <h3>Oral Reading Metrics</h3>
-    <table>
-      <tr><th>Metric</th><th>Result</th></tr>
-      <tr><td>Words Per Minute (WPM)</td><td id="res-wpm">-</td></tr>
-      <tr><td>Accuracy Rate</td><td id="res-accuracy">-</td></tr>
-      <tr><td>Potential Miscues Flagged</td><td id="res-miscues-count">-</td></tr>
-    </table>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <button class="btn btn-secondary" id="btn-q-prev" onclick="prevQuestion()" style="display:none;">← Previous</button>
+      <button class="btn" id="btn-q-next" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
 
-    <h3>Comprehension & Retelling Evaluation</h3>
-    <table id="res-comp-table">
+  <!-- SCREEN 5: TEACHER AUDIT DASHBOARD -->
+  <div id="step-5" class="step">
+    <h1>Teacher Audit Report</h1>
+    <div id="audit-header" style="margin-bottom: 20px; font-size: 16px;"></div>
+
+    <!-- AUDIO PLAYER -->
+    <div class="audio-preview">
+      <h3>🎙️ Recorded Student Audio</h3>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Playback student audio to verify accuracy, WCPM, or question responses:</p>
+      <audio id="audit-audio-player" controls style="width: 100%;"></audio>
+    </div>
+
+    <!-- METRICS BADGES -->
+    <h3>Oral Reading Metrics</h3>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="lbl">Accuracy</div><div class="val" id="res-accuracy">-</div></div>
+      <div class="metric-card"><div class="lbl">WCPM</div><div class="val" id="res-wcpm">-</div></div>
+      <div class="metric-card"><div class="lbl">Miscues</div><div class="val" id="res-miscues">-</div></div>
+      <div class="metric-card"><div class="lbl">Fluency Level</div><div class="val" id="res-fluency" style="font-size: 18px; margin-top:8px;">-</div></div>
+    </div>
+
+    <!-- MATH EQUATION BREAKDOWN -->
+    <h4>WCPM & Math Breakdown</h4>
+    <div class="math-breakdown" id="wpm-math-display"></div>
+
+    <!-- COMPREHENSION EVALUATION TABLE WITH TICKS & CROSSES -->
+    <h3 style="margin-top: 28px;">Comprehension Evaluation (<span id="res-comp-score"></span>)</h3>
+    <table>
       <thead>
         <tr>
-          <th>Question</th>
-          <th>Student Spoken Response</th>
-          <th>Auto-Score</th>
+          <th style="width: 5%;">Score</th>
+          <th style="width: 35%;">Question</th>
+          <th style="width: 40%;">Student Answer</th>
+          <th style="width: 20%;">Auto-Evaluation</th>
         </tr>
       </thead>
-      <tbody id="res-comp-body"></tbody>
+      <tbody id="audit-comp-body"></tbody>
     </table>
 
-    <button class="btn" onclick="window.print()">🖨️ Print / Save PDF</button>
-    <button class="btn btn-secondary" onclick="location.reload()">Start New Assessment</button>
+    <div style="margin-top: 28px; display: flex; gap: 12px;">
+      <button class="btn" onclick="window.print()">🖨️️ Print / Save PDF</button>
+      <button class="btn btn-secondary" onclick="location.reload()">Start New Assessment</button>
+    </div>
   </div>
 
 </div>
 
 <script>
-  // PASSAGE DATA & QUESTION KEYS
+  // STORIES DATA & KEY CONCEPTS
   const STORIES = {
     aotea: {
       title: "Aotea (Great Barrier Island)",
@@ -163,7 +284,7 @@
         { id: "q5", type: "Vocabulary", text: "What does living off-grid or using solar/rain tanks mean?", key: ["not connected", "power", "water", "own", "panels", "rain"] },
         { id: "q6", type: "Inference", text: "How does having a vegetable garden help Dylan’s family?", key: ["expensive", "cheaper", "cost", "save", "food"] },
         { id: "q7", type: "Evaluative", text: "Do you think living on Aotea would be easy or hard? Why?", key: ["easy", "hard", "because"] },
-        { id: "q8", type: "Evaluative", text: "Would you like to live on Aotea Great Barrier Island? Why or why not?", key: ["yes", "no", "because"] }
+        { id: "q8", type: "Evaluative", text: "Would you like to live on Aotea Great Barrier Island? Why/Why not?", key: ["yes", "no", "because"] }
       ]
     },
     funrun: {
@@ -174,229 +295,291 @@
         { id: "q2", type: "Literal", text: "What happens to Poppy during the run?", key: ["tripped", "fell", "root", "grass", "hurt"] },
         { id: "q3", type: "Vocabulary", text: "What does 'thumping' mean when describing Sam’s chest?", key: ["heart", "beating", "fast", "racing", "pounding"] },
         { id: "q4", type: "Inference", text: "Why is Bobby smiling even though he is at the back?", key: ["having fun", "enjoying", "didn't care", "winning", "happy"] },
-        { id: "q5", type: "Evaluative", text: "Do you think Tammy made the right choice to stop and help Poppy? Why or why not?", key: ["yes", "no", "right", "wrong", "because"] }
+        { id: "q5", type: "Evaluative", text: "Do you think Tammy made the right choice to stop and help Poppy? Why/Why not?", key: ["yes", "no", "right", "wrong", "because"] }
       ]
     }
   };
 
-  // APP STATE
-  let chosenStoryKey = null;
-  let selectedStory = null;
+  // GLOBAL STATE
   let studentName = "";
+  let selectedStoryKey = null;
+  let selectedStory = null;
+  
   let readingStartTime = null;
   let readingEndTime = null;
-  let readingDurationSec = 0;
-  
+  let durationSec = 0;
+  let timerInterval = null;
+
   let mediaRecorder = null;
   let audioChunks = [];
-  let recordedAudioUrl = null;
+  
+  let speechRec = null;
+  let rawTranscript = "";
+  let currentQIndex = 0;
+  let studentAnswers = {};
 
-  let speechRecognition = null;
-  let fullReadingTranscript = "";
-  let questionTranscripts = {};
-
-  // STORY CARD SELECTION
-  function selectStoryCard(key) {
-    chosenStoryKey = key;
-    document.querySelectorAll(".story-card").forEach(card => card.classList.remove("selected"));
+  // SCREEN 1: STORY CARDS
+  function selectStory(key) {
+    selectedStoryKey = key;
+    document.querySelectorAll(".story-card").forEach(b => b.classList.remove("selected"));
     document.getElementById(`card-${key}`).classList.add("selected");
-    document.getElementById("btn-continue-step1").style.display = "block";
+    document.getElementById("btn-to-mic").style.display = "block";
   }
 
-  // INITIALIZATION
   function goToStep2() {
     studentName = document.getElementById("student-name").value.trim() || "Student";
-    if (!chosenStoryKey) return;
-    
-    selectedStory = STORIES[chosenStoryKey];
-
-    // Render passage
-    const passageContainer = document.getElementById("passage-container");
-    const words = selectedStory.text.split(" ");
-    passageContainer.innerHTML = words.map((w, idx) => `<span class="passage-word" id="pword-${idx}">${w}</span>`).join(" ");
+    selectedStory = STORIES[selectedStoryKey];
 
     document.getElementById("step-1").classList.remove("active");
     document.getElementById("step-2").classList.add("active");
-
-    initAudioRecording();
   }
 
-  // AUDIO RECORDING SETUP
-  async function initAudioRecording() {
+  // SCREEN 2: MIC TEST & LEVEL METER
+  async function testMicPermissions() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      document.getElementById("mic-test-status").innerText = "Status: Microphone detected & active!";
+      document.getElementById("btn-to-reading").style.display = "inline-block";
+
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const analyzer = audioCtx.createAnalyser();
+      const source = audioCtx.createMediaStreamSource(stream);
+      source.connect(analyzer);
+      const data = new Uint8Array(analyzer.frequencyBinCount);
+
+      function updateMeter() {
+        analyzer.getByteFrequencyData(data);
+        let average = data.reduce((a, b) => a + b) / data.length;
+        document.getElementById("mic-bar").style.width = Math.min(100, average * 3) + "%";
+        requestAnimationFrame(updateMeter);
+      }
+      updateMeter();
+
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunks.push(e.data);
-      };
+      mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        recordedAudioUrl = URL.createObjectURL(audioBlob);
-        document.getElementById("student-audio-player").src = recordedAudioUrl;
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        document.getElementById("audit-audio-player").src = URL.createObjectURL(blob);
       };
+
     } catch (err) {
-      console.warn("Audio recording error/permission denied:", err);
+      document.getElementById("mic-test-status").innerText = "Status: Mic permission blocked. Check browser settings.";
     }
   }
 
-  // SPEECH RECOGNITION / READING
-  function startReadingProcess() {
-    document.getElementById("btn-start-reading").style.display = "none";
-    document.getElementById("btn-stop-reading").style.display = "inline-block";
-    document.getElementById("mic-status").innerText = "Status: Listening...";
-
-    if (mediaRecorder && mediaRecorder.state === "inactive") {
-      audioChunks = [];
-      mediaRecorder.start();
-    }
-
-    readingStartTime = new Date();
-    
-    // Web Speech API
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      speechRecognition = new SpeechRecognition();
-      speechRecognition.continuous = true;
-      speechRecognition.interimResults = true;
-      speechRecognition.lang = 'en-NZ';
-
-      speechRecognition.onresult = (event) => {
-        let transcript = "";
-        for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript + " ";
-        }
-        fullReadingTranscript = transcript.trim();
-        document.getElementById("live-reading-transcript").innerText = fullReadingTranscript;
-        alignAndHighlightPassage(fullReadingTranscript);
-      };
-
-      speechRecognition.start();
-    } else {
-      document.getElementById("live-reading-transcript").innerText = "Speech recognition is not supported on this browser version.";
-    }
-  }
-
-  function finishReadingProcess() {
-    readingEndTime = new Date();
-    readingDurationSec = Math.max(1, Math.round((readingEndTime - readingStartTime) / 1000));
-    
-    if (speechRecognition) {
-      speechRecognition.stop();
-    }
-
-    renderQuestionsStep();
+  function goToStep3() {
+    document.getElementById("passage-text").innerText = selectedStory.text;
     document.getElementById("step-2").classList.remove("active");
     document.getElementById("step-3").classList.add("active");
   }
 
-  // ALIGNMENT / MISCUE HIGHLIGHTING
-  function alignAndHighlightPassage(transcript) {
-    const originalWords = selectedStory.text.split(" ");
-    const spokenWords = transcript.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
+  // SCREEN 3: CLEAN READING
+  function startReading() {
+    document.getElementById("btn-start-reading").style.display = "none";
+    document.getElementById("btn-stop-reading").style.display = "inline-block";
+    document.getElementById("reading-status").innerText = "Status: Reading in progress...";
 
-    originalWords.forEach((word, idx) => {
-      const cleanWord = word.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const elem = document.getElementById(`pword-${idx}`);
-      if (!elem) return;
+    readingStartTime = new Date();
+    audioChunks = [];
+    if (mediaRecorder) mediaRecorder.start();
 
-      elem.className = "passage-word";
+    // Timer
+    timerInterval = setInterval(() => {
+      let elapsed = Math.round((new Date() - readingStartTime) / 1000);
+      document.getElementById("timer-display").innerText = `Time: ${elapsed}s`;
+    }, 1000);
 
-      if (spokenWords.length > 0) {
-        if (!spokenWords.includes(cleanWord)) {
-          if (spokenWords.length > idx + 2) {
-            elem.classList.add("miscue-omission");
-          }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      speechRec = new SpeechRecognition();
+      speechRec.continuous = true;
+      speechRec.interimResults = true;
+      speechRec.lang = 'en-NZ';
+
+      speechRec.onresult = (e) => {
+        let text = "";
+        for (let i = 0; i < e.results.length; i++) {
+          text += e.results[i][0].transcript + " ";
         }
-      }
-    });
+        rawTranscript = text.trim();
+      };
+      speechRec.start();
+    }
   }
 
-  // COMPREHENSION STEP
-  function renderQuestionsStep() {
-    const container = document.getElementById("questions-container");
-    container.innerHTML = "";
+  function finishReading() {
+    clearInterval(timerInterval);
+    readingEndTime = new Date();
+    durationSec = Math.max(1, Math.round((readingEndTime - readingStartTime) / 1000));
 
-    selectedStory.questions.forEach((q, idx) => {
-      container.innerHTML += `
-        <div class="q-card">
-          <div class="q-type">${q.type} Question</div>
-          <h3>${q.text}</h3>
-          <div class="live-transcript" id="q-transcript-${idx}">Click speak to answer...</div>
-          <button class="btn btn-secondary" onclick="recordQuestionAnswer(${idx})">🎤 Speak Answer</button>
-        </div>
-      `;
-    });
+    if (speechRec) speechRec.stop();
+
+    currentQIndex = 0;
+    renderCurrentQuestion();
+    document.getElementById("step-3").classList.remove("active");
+    document.getElementById("step-4").classList.add("active");
   }
 
-  function recordQuestionAnswer(qIndex) {
-    const targetDiv = document.getElementById(`q-transcript-${qIndex}`);
-    targetDiv.innerText = "Listening for answer...";
+  // SCREEN 4: QUESTION BY QUESTION FLOW
+  function renderCurrentQuestion() {
+    const q = selectedStory.questions[currentQIndex];
+    document.getElementById("q-current-num").innerText = currentQIndex + 1;
+    document.getElementById("q-total-num").innerText = selectedStory.questions.length;
+    document.getElementById("q-type-badge").innerText = `${q.type} Question`;
+    document.getElementById("q-text-display").innerText = q.text;
+    document.getElementById("prompt-box").style.display = "none";
+
+    document.getElementById("q-answer-input").value = studentAnswers[currentQIndex] || "";
+
+    document.getElementById("btn-q-prev").style.display = currentQIndex > 0 ? "inline-block" : "none";
+    document.getElementById("btn-q-next").innerText = currentQIndex === selectedStory.questions.length - 1 ? "Finish Assessment →" : "Next Question →";
+  }
+
+  function readQuestionAloud() {
+    const q = selectedStory.questions[currentQIndex];
+    const utterance = new SpeechSynthesisUtterance(q.text);
+    utterance.lang = 'en-NZ';
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function recordQuestionResponse() {
+    const btn = document.getElementById("btn-q-mic");
+    btn.innerText = "Listening...";
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
     const qRec = new SpeechRecognition();
     qRec.lang = 'en-NZ';
-    qRec.interimResults = false;
-
     qRec.onresult = (e) => {
       const ans = e.results[0][0].transcript;
-      questionTranscripts[qIndex] = ans;
-      targetDiv.innerText = `Spoken: "${ans}"`;
-    };
+      const currentVal = document.getElementById("q-answer-input").value;
+      const newVal = currentVal ? `${currentVal} ${ans}` : ans;
+      
+      document.getElementById("q-answer-input").value = newVal;
+      studentAnswers[currentQIndex] = newVal;
+      btn.innerText = "🎤 Speak Answer";
 
+      // Elaboration Prompt Safeguard
+      checkElaborationPrompt(newVal);
+    };
+    qRec.onerror = () => { btn.innerText = "🎤 Speak Answer"; };
     qRec.start();
   }
 
-  // FINAL AUDIT GENERATION
+  function checkElaborationPrompt(text) {
+    const words = text.trim().split(/\s+/).length;
+    const clean = text.toLowerCase();
+    
+    // Trigger prompt if answer is under 4 words or missing 'because' on evaluative items
+    const q = selectedStory.questions[currentQIndex];
+    if (words < 4 || (q.type === "Evaluative" && !clean.includes("because"))) {
+      document.getElementById("prompt-box").style.display = "block";
+    } else {
+      document.getElementById("prompt-box").style.display = "none";
+    }
+  }
+
+  function prevQuestion() {
+    saveCurrentAnswer();
+    if (currentQIndex > 0) {
+      currentQIndex--;
+      renderCurrentQuestion();
+    }
+  }
+
+  function nextQuestion() {
+    saveCurrentAnswer();
+    if (currentQIndex < selectedStory.questions.length - 1) {
+      currentQIndex++;
+      renderCurrentQuestion();
+    } else {
+      finishAssessment();
+    }
+  }
+
+  function saveCurrentAnswer() {
+    studentAnswers[currentQIndex] = document.getElementById("q-answer-input").value.trim();
+  }
+
+  // SCREEN 5: AUDIT DASHBOARD & METRICS
   function finishAssessment() {
     if (mediaRecorder && mediaRecorder.state === "recording") {
       mediaRecorder.stop();
     }
 
-    const totalWords = selectedStory.text.split(" ").length;
-    const wpm = Math.round((totalWords / readingDurationSec) * 60);
+    const totalWords = selectedStory.text.split(/\s+/).length;
+    const rawWpm = Math.round((totalWords / durationSec) * 60);
 
-    const omissions = document.querySelectorAll(".miscue-omission").length;
-    const accuracy = Math.max(0, Math.round(((totalWords - omissions) / totalWords) * 100));
+    // Omission tracking via text alignment
+    const spokenWords = rawTranscript.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
+    let Omissions = 0;
+    selectedStory.text.split(/\s+/).forEach(w => {
+      const clean = w.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (clean && !spokenWords.includes(clean)) Omissions++;
+    });
 
-    document.getElementById("student-summary-header").innerHTML = `
+    const wordsCorrect = Math.max(0, totalWords - Omissions);
+    const accuracy = Math.max(0, Math.round((wordsCorrect / totalWords) * 100));
+    const wcpm = Math.round((wordsCorrect / durationSec) * 60);
+
+    // Fluency Indicator
+    let fluency = "Fluent";
+    if (accuracy < 90 || wcpm < 70) fluency = "Needs Support";
+    else if (accuracy < 95 || wcpm < 90) fluency = "Developing";
+
+    // Header Summary
+    document.getElementById("audit-header").innerHTML = `
       <p><strong>Student:</strong> ${studentName}</p>
       <p><strong>Story:</strong> ${selectedStory.title}</p>
-      <p><strong>Total Reading Time:</strong> ${readingDurationSec} seconds</p>
+      <p><strong>Reading Time:</strong> ${durationSec} seconds</p>
     `;
 
-    document.getElementById("res-wpm").innerText = `${wpm} WPM`;
     document.getElementById("res-accuracy").innerText = `${accuracy}%`;
-    document.getElementById("res-miscues-count").innerText = `${omissions} potential omissions/miscues`;
+    document.getElementById("res-wcpm").innerText = `${wcpm}`;
+    document.getElementById("res-miscues").innerText = `${Omissions}`;
+    document.getElementById("res-fluency").innerText = fluency;
 
-    const compBody = document.getElementById("res-comp-body");
+    // Formula Breakdown Display
+    document.getElementById("wpm-math-display").innerHTML = `
+      <strong>Raw WPM:</strong> (${totalWords} words / ${durationSec}s) × 60 = <strong>${rawWpm} WPM</strong><br>
+      <strong>WCPM Formula:</strong> [(${totalWords} total words - ${Omissions} miscues) / ${durationSec}s] × 60 = <strong>${wcpm} WCPM</strong>
+    `;
+
+    // Question Evaluation Table with Ticks (✔) & Crosses (✘)
+    const compBody = document.getElementById("audit-comp-body");
     compBody.innerHTML = "";
+    let correctCount = 0;
 
     selectedStory.questions.forEach((q, idx) => {
-      const studentAns = questionTranscripts[idx] || "No response recorded";
-      const evaluation = evaluateAnswer(q, studentAns);
+      const ans = studentAnswers[idx] || "No response recorded";
+      const evalRes = evaluateAnswer(q, ans);
+
+      if (evalRes.icon === "✔") correctCount++;
 
       compBody.innerHTML += `
         <tr>
+          <td style="text-align:center;"><span class="${evalRes.cssClass}">${evalRes.icon}</span></td>
           <td><strong>[${q.type}]</strong> ${q.text}</td>
-          <td>"${studentAns}"</td>
-          <td><span style="color: ${evaluation.color}; font-weight: bold;">${evaluation.status}</span></td>
+          <td>"${ans}"</td>
+          <td><span style="color:${evalRes.color}; font-weight:bold;">${evalRes.status}</span></td>
         </tr>
       `;
     });
 
-    document.getElementById("step-3").classList.remove("active");
-    document.getElementById("step-4").classList.add("active");
+    document.getElementById("res-comp-score").innerText = `${correctCount} / ${selectedStory.questions.length} Correct`;
+
+    document.getElementById("step-4").classList.remove("active");
+    document.getElementById("step-5").classList.add("active");
   }
 
-  // MULTI-CONCEPT EVALUATION LOGIC
+  // MULTI-CONCEPT GRADING LOGIC
   function evaluateAnswer(q, answer) {
     const clean = answer.toLowerCase().trim();
     const wordCount = clean.split(/\s+/).filter(w => w.length > 0).length;
 
     if (wordCount < 2 || clean.includes("dont know") || clean.includes("don't know") || clean === "no idea") {
-      return { status: "Incorrect (Insufficient / Filler)", color: "var(--danger)" };
+      return { icon: "✘", status: "Incorrect (Insufficient)", color: "var(--danger)", cssClass: "tick-fail" };
     }
 
     if (q.type === "Evaluative") {
@@ -404,9 +587,9 @@
       const hasReason = clean.includes("because") || clean.includes("so") || clean.includes("since") || wordCount >= 5;
       
       if (hasStance && hasReason) {
-        return { status: "Correct (Valid Reason)", color: "var(--success)" };
+        return { icon: "✔", status: "Correct (Stance + Reason)", color: "var(--success)", cssClass: "tick-pass" };
       } else {
-        return { status: "Partial / Check (Missing Reason)", color: "var(--warning)" };
+        return { icon: "⚠️", status: "Partial (Missing Reason)", color: "var(--warning)", cssClass: "tick-warn" };
       }
     }
 
@@ -417,13 +600,13 @@
       });
 
       if (matches >= 2 || (matches >= 1 && wordCount >= 6)) {
-        return { status: "Correct", color: "var(--success)" };
+        return { icon: "✔", status: "Correct", color: "var(--success)", cssClass: "tick-pass" };
       } else if (matches === 1) {
-        return { status: "Partial", color: "var(--warning)" };
+        return { icon: "⚠️", status: "Partial Concept Match", color: "var(--warning)", cssClass: "tick-warn" };
       }
     }
 
-    return { status: "Incorrect", color: "var(--danger)" };
+    return { icon: "✘", status: "Incorrect", color: "var(--danger)", cssClass: "tick-fail" };
   }
 </script>
 
