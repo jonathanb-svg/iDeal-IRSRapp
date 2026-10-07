@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Oral Reading & Comprehension Assessment</title>
+  <title>iDeaL® Oral Reading Assessment</title>
   <style>
     :root {
       --primary: #2563eb;
@@ -26,12 +26,20 @@
     .step.active { display: block; }
     
     label { display: block; margin-bottom: 8px; font-weight: 600; }
-    select, input[type="text"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 16px; font-size: 16px; }
+    input[type="text"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 20px; font-size: 16px; }
     
-    .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+    .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
     .btn:hover { background: var(--primary-hover); }
     .btn-secondary { background: #64748b; }
     .btn-secondary:hover { background: #475569; }
+
+    /* Story Selection Cards / Buttons */
+    .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; margin-bottom: 20px; }
+    .story-card { border: 2px solid var(--border); padding: 20px; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: #fff; }
+    .story-card:hover { border-color: var(--primary); background: #f0f6ff; }
+    .story-card.selected { border-color: var(--primary); background: #eff6ff; box-shadow: 0 0 0 2px var(--primary); }
+    .story-card h3 { margin-bottom: 6px; color: var(--primary); }
+    .story-card p { font-size: 14px; color: var(--text-muted); }
 
     .passage-box { font-size: 20px; line-height: 1.8; padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: #fafafa; margin-bottom: 20px; user-select: none; }
     .passage-word { display: inline-block; margin-right: 4px; padding: 2px 4px; border-radius: 4px; }
@@ -55,19 +63,25 @@
 
 <div class="container">
   
-  <!-- STEP 1: SETUP -->
+  <!-- STEP 1: SETUP (WITH STORY BUTTONS RESTORED) -->
   <div id="step-1" class="step active">
-    <h1>Oral Reading Assessment Setup</h1>
+    <h1>iDeaL® Oral Reading Assessment</h1>
     <label for="student-name">Student Name</label>
-    <input type="text" id="student-name" placeholder="Enter student full name">
+    <input type="text" id="student-name" placeholder="Enter student name...">
 
-    <label for="story-select">Select Story Passage</label>
-    <select id="story-select">
-      <option value="aotea">Aotea (Great Barrier Island)</option>
-      <option value="funrun">The Fun Run</option>
-    </select>
+    <label>Select Assessment Story</label>
+    <div class="story-grid">
+      <div class="story-card" id="card-aotea" onclick="selectStoryCard('aotea')">
+        <h3>Aotea</h3>
+        <p>Great Barrier Island</p>
+      </div>
+      <div class="story-card" id="card-funrun" onclick="selectStoryCard('funrun')">
+        <h3>The Fun Run</h3>
+        <p>School Race Story</p>
+      </div>
+    </div>
 
-    <button class="btn" onclick="goToStep2()">Continue to Reading Step</button>
+    <button class="btn" id="btn-continue-step1" onclick="goToStep2()" style="display:none; width: 100%;">Start Assessment →</button>
   </div>
 
   <!-- STEP 2: READING PASSAGE -->
@@ -166,6 +180,7 @@
   };
 
   // APP STATE
+  let chosenStoryKey = null;
   let selectedStory = null;
   let studentName = "";
   let readingStartTime = null;
@@ -179,13 +194,21 @@
   let speechRecognition = null;
   let fullReadingTranscript = "";
   let questionTranscripts = {};
-  let currentQIndex = -1;
+
+  // STORY CARD SELECTION
+  function selectStoryCard(key) {
+    chosenStoryKey = key;
+    document.querySelectorAll(".story-card").forEach(card => card.classList.remove("selected"));
+    document.getElementById(`card-${key}`).classList.add("selected");
+    document.getElementById("btn-continue-step1").style.display = "block";
+  }
 
   // INITIALIZATION
   function goToStep2() {
     studentName = document.getElementById("student-name").value.trim() || "Student";
-    const storyKey = document.getElementById("story-select").value;
-    selectedStory = STORIES[storyKey];
+    if (!chosenStoryKey) return;
+    
+    selectedStory = STORIES[chosenStoryKey];
 
     // Render passage
     const passageContainer = document.getElementById("passage-container");
@@ -235,7 +258,7 @@
       speechRecognition = new SpeechRecognition();
       speechRecognition.continuous = true;
       speechRecognition.interimResults = true;
-      speechRecognition.lang = 'en-NZ'; // NZ English tuning
+      speechRecognition.lang = 'en-NZ';
 
       speechRecognition.onresult = (event) => {
         let transcript = "";
@@ -276,12 +299,10 @@
       const elem = document.getElementById(`pword-${idx}`);
       if (!elem) return;
 
-      // Reset classes
       elem.className = "passage-word";
 
       if (spokenWords.length > 0) {
         if (!spokenWords.includes(cleanWord)) {
-          // If spoken stream has progressed past this word point, mark omission
           if (spokenWords.length > idx + 2) {
             elem.classList.add("miscue-omission");
           }
@@ -333,15 +354,12 @@
       mediaRecorder.stop();
     }
 
-    // Calculations
     const totalWords = selectedStory.text.split(" ").length;
     const wpm = Math.round((totalWords / readingDurationSec) * 60);
 
-    // Count miscues from highlighted UI elements
     const omissions = document.querySelectorAll(".miscue-omission").length;
     const accuracy = Math.max(0, Math.round(((totalWords - omissions) / totalWords) * 100));
 
-    // Render Header
     document.getElementById("student-summary-header").innerHTML = `
       <p><strong>Student:</strong> ${studentName}</p>
       <p><strong>Story:</strong> ${selectedStory.title}</p>
@@ -352,7 +370,6 @@
     document.getElementById("res-accuracy").innerText = `${accuracy}%`;
     document.getElementById("res-miscues-count").innerText = `${omissions} potential omissions/miscues`;
 
-    // Render Comprehension Evaluation
     const compBody = document.getElementById("res-comp-body");
     compBody.innerHTML = "";
 
@@ -378,12 +395,10 @@
     const clean = answer.toLowerCase().trim();
     const wordCount = clean.split(/\s+/).filter(w => w.length > 0).length;
 
-    // Rule 1: Automatic Fail on Filler / Very Short
     if (wordCount < 2 || clean.includes("dont know") || clean.includes("don't know") || clean === "no idea") {
       return { status: "Incorrect (Insufficient / Filler)", color: "var(--danger)" };
     }
 
-    // Rule 2: Evaluative Questions Require Reason Connectors
     if (q.type === "Evaluative") {
       const hasStance = clean.includes("yes") || clean.includes("no") || clean.includes("easy") || clean.includes("hard") || clean.includes("right") || clean.includes("wrong");
       const hasReason = clean.includes("because") || clean.includes("so") || clean.includes("since") || wordCount >= 5;
@@ -395,7 +410,6 @@
       }
     }
 
-    // Rule 3: Multi-Key Matching
     if (q.key) {
       let matches = 0;
       q.key.forEach(k => {
