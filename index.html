@@ -23,7 +23,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: var(--bg-color); 
       color: var(--text); 
-      padding: 20px; 
+      padding: 16px; 
       line-height: 1.5;
     }
     
@@ -31,33 +31,33 @@
       max-width: 850px; 
       margin: 0 auto; 
       background: var(--card-bg); 
-      padding: 32px; 
+      padding: 28px; 
       border-radius: 12px; 
       box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
     }
 
-    h1, h2, h3 { margin-bottom: 16px; color: var(--text); }
+    h1, h2, h3 { margin-bottom: 12px; color: var(--text); }
     .step { display: none; }
     .step.active { display: block; }
 
-    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 16px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 15px; }
     input[type="text"], textarea { 
       width: 100%; 
-      padding: 12px; 
+      padding: 10px 12px; 
       border: 1px solid var(--border); 
       border-radius: 8px; 
-      font-size: 16px; 
+      font-size: 15px; 
       font-family: inherit;
     }
-    textarea { min-height: 100px; resize: vertical; margin-top: 8px; }
+    textarea { min-height: 90px; resize: vertical; margin-top: 6px; }
 
     .btn { 
       background: var(--primary); 
       color: white; 
       border: none; 
-      padding: 12px 24px; 
+      padding: 10px 20px; 
       border-radius: 8px; 
-      font-size: 16px; 
+      font-size: 15px; 
       font-weight: 600; 
       cursor: pointer; 
       transition: all 0.2s; 
@@ -72,10 +72,10 @@
     .btn-success:hover { background: #15803d; }
 
     /* SCREEN 1: STORY CARDS */
-    .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0 28px 0; }
+    .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0 24px 0; }
     .story-card { 
       border: 2px solid var(--border); 
-      padding: 28px 20px; 
+      padding: 20px 16px; 
       border-radius: 12px; 
       text-align: center; 
       cursor: pointer; 
@@ -84,30 +84,31 @@
     }
     .story-card:hover { border-color: var(--primary); background: #f0f6ff; }
     .story-card.selected { border-color: var(--primary); background: #eff6ff; box-shadow: 0 0 0 3px rgba(37,99,235,0.25); }
-    .story-card h3 { margin-bottom: 8px; color: var(--primary); font-size: 22px; }
-    .story-card p { font-size: 14px; color: var(--text-muted); }
+    .story-card h3 { margin-bottom: 6px; color: var(--primary); font-size: 20px; }
+    .story-card p { font-size: 13px; color: var(--text-muted); }
 
     /* SCREEN 2: MIC METER */
-    .mic-meter-box { height: 20px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin: 16px 0 24px 0; border: 1px solid var(--border); }
+    .mic-meter-box { height: 18px; background: #e2e8f0; border-radius: 9px; overflow: hidden; margin: 12px 0 20px 0; border: 1px solid var(--border); }
     .mic-meter-bar { height: 100%; width: 0%; background: var(--success); transition: width 0.1s ease; }
 
-    /* SCREEN 3: NO-SCROLL READING VIEW */
+    /* SCREEN 3: ZERO-SCROLL READING VIEW */
     .passage-box-clean { 
-      font-size: 24px; 
-      line-height: 1.8; 
-      padding: 32px; 
+      font-size: 18px; 
+      line-height: 1.6; 
+      padding: 20px 24px; 
       border: 2px solid var(--border); 
       border-radius: 12px; 
       background: #ffffff; 
-      margin: 20px 0 28px 0; 
+      margin: 16px 0; 
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-      max-height: 400px;
-      overflow: hidden; /* Zero scrolling */
-      display: flex;
-      align-items: center;
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
     }
+    .passage-box-clean h3 { margin-bottom: 8px; color: var(--primary); font-size: 22px; }
+    .passage-box-clean h4 { margin: 12px 0 6px 0; color: #334155; font-size: 18px; }
+
     .status-banner { 
-      padding: 12px 20px; 
+      padding: 10px 16px; 
       border-radius: 8px; 
       background: #e0f2fe; 
       color: #0369a1; 
@@ -117,22 +118,26 @@
       align-items: center; 
     }
 
-    /* SCREEN 4: QUESTION BY QUESTION FLOW */
-    .q-card { border: 1px solid var(--border); border-radius: 12px; padding: 28px; background: #fff; margin: 20px 0; }
-    .q-type-badge { font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
-    .prompt-box { background: #fef3c7; border: 1px solid #fde047; color: #854d0e; padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-weight: 500; display: none; }
+    /* SCREEN 4: QUESTION FLOW */
+    .q-card { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: #fff; margin: 16px 0; }
+    .q-type-badge { font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+    .prompt-box { background: #fef3c7; border: 1px solid #fde047; color: #854d0e; padding: 10px 14px; border-radius: 8px; margin-top: 10px; font-weight: 600; display: none; }
 
     /* SCREEN 5: AUDIT DASHBOARD & METRICS */
-    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 20px 0; }
-    .metric-card { background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 10px; text-align: center; }
-    .metric-card .val { font-size: 26px; font-weight: 800; color: var(--primary); margin-top: 4px; }
-    .metric-card .lbl { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+    .metric-card { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 10px; text-align: center; }
+    .metric-card .val { font-size: 22px; font-weight: 800; color: var(--primary); margin-top: 2px; }
+    .metric-card .lbl { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
 
-    .audio-preview { margin: 24px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; }
-    .math-breakdown { background: #f1f5f9; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 14px; margin: 12px 0 24px 0; border: 1px solid var(--border); line-height: 1.6; }
+    .audio-preview { margin: 16px 0; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; }
+    .math-breakdown { background: #f1f5f9; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px; margin: 10px 0 20px 0; border: 1px solid var(--border); line-height: 1.5; }
 
-    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 15px; }
-    th, td { border: 1px solid var(--border); padding: 12px; text-align: left; vertical-align: top; }
+    .miscue-box { background: #ffffff; border: 1px solid var(--border); padding: 16px; border-radius: 8px; font-size: 16px; line-height: 1.8; margin: 12px 0 20px 0; }
+    .word-match { color: #15803d; font-weight: 600; }
+    .word-omitted { color: #dc2626; text-decoration: line-through; margin: 0 2px; }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; vertical-align: top; }
     th { background: #f1f5f9; font-weight: 700; }
     
     .tick-pass { color: var(--success); font-weight: 800; font-size: 18px; }
@@ -147,16 +152,16 @@
   <!-- SCREEN 1: HOME & STORY SELECTION -->
   <div id="step-1" class="step active">
     <h1>iDeaL® Oral Reading Assessment</h1>
-    <p style="color: var(--text-muted); margin-bottom: 24px;">Select a story passage and enter student details to begin.</p>
+    <p style="color: var(--text-muted); margin-bottom: 20px;">Select an assessment story and enter student details to begin.</p>
     
     <label for="student-name">Student Name</label>
     <input type="text" id="student-name" placeholder="Enter student name...">
 
-    <label style="margin-top: 20px;">Select Assessment Story</label>
+    <label style="margin-top: 16px;">Select Assessment Story</label>
     <div class="story-grid">
       <div class="story-card" id="card-aotea" onclick="selectStory('aotea')">
-        <h3>Aotea</h3>
-        <p>Great Barrier Island</p>
+        <h3>Life on Aotea</h3>
+        <p>Year 3 Non-Fiction (139 Words)</p>
       </div>
       <div class="story-card" id="card-funrun" onclick="selectStory('funrun')">
         <h3>The Fun Run</h3>
@@ -170,11 +175,20 @@
   <!-- SCREEN 2: MIC TEST & LEVEL CHECK -->
   <div id="step-2" class="step">
     <h2>Microphone & Audio Check</h2>
-    <p style="color: var(--text-muted); margin-bottom: 16px;">Click the button below and speak out loud to confirm your microphone is working.</p>
+    <p style="color: var(--text-muted); margin-bottom: 12px;">Test your microphone and record a short test sample to confirm your sound works properly.</p>
     
-    <button class="btn btn-secondary" onclick="testMicPermissions()">🎤 Test Microphone</button>
+    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+      <button class="btn btn-secondary" onclick="testMicPermissions()">🎤 Activate Mic</button>
+      <button class="btn btn-secondary" id="btn-test-rec" onclick="recordAudioSample()" style="display:none;">🔴 Record 3-Sec Sample</button>
+    </div>
+
     <div class="mic-meter-box"><div class="mic-meter-bar" id="mic-bar"></div></div>
-    <div id="mic-test-status" style="font-weight: 600; color: var(--primary); margin-bottom: 24px;">Status: Waiting for mic test...</div>
+    <div id="mic-test-status" style="font-weight: 600; color: var(--primary); margin-bottom: 16px;">Status: Waiting for mic test...</div>
+
+    <div id="sample-audio-container" style="display:none; margin-bottom: 20px;">
+      <label>Play Sample Test Recording:</label>
+      <audio id="sample-audio-player" controls style="width: 100%; margin-top: 4px;"></audio>
+    </div>
 
     <button class="btn btn-success" id="btn-to-reading" onclick="goToStep3()" style="display:none;">Start Reading Step →</button>
   </div>
@@ -197,23 +211,23 @@
   <!-- SCREEN 4: QUESTION BY QUESTION FLOW -->
   <div id="step-4" class="step">
     <h2>Step 2: Comprehension Questions</h2>
-    <p style="color: var(--text-muted); margin-bottom: 8px;">Question <span id="q-current-num">1</span> of <span id="q-total-num">5</span></p>
+    <p style="color: var(--text-muted); margin-bottom: 6px;">Question <span id="q-current-num">1</span> of <span id="q-total-num">8</span></p>
 
     <div class="q-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
         <span id="q-type-badge" class="q-type-badge">Literal</span>
-        <button class="btn btn-secondary" onclick="readQuestionAloud()" style="padding: 6px 12px; font-size: 14px;">🔊 Read Question Aloud</button>
+        <button class="btn btn-secondary" onclick="readQuestionAloud()" style="padding: 4px 10px; font-size: 13px;">🔊 Read Question Aloud</button>
       </div>
       
-      <h3 id="q-text-display" style="font-size: 20px; line-height: 1.4;">Question text...</h3>
+      <h3 id="q-text-display" style="font-size: 18px; line-height: 1.4;">Question text...</h3>
 
       <!-- Elaboration prompt alert -->
       <div id="prompt-box" class="prompt-box">💡 Could you tell me a little bit more or explain why?</div>
 
-      <div style="margin-top:20px;">
+      <div style="margin-top:16px;">
         <button class="btn btn-secondary" id="btn-q-mic" onclick="recordQuestionResponse()">🎤 Speak Answer</button>
-        <label style="margin-top: 16px; font-size: 14px;">Spoken or Typed Answer (Editable):</label>
-        <textarea id="q-answer-input" placeholder="Speak your answer or type here..."></textarea>
+        <label style="margin-top: 12px; font-size: 13px;">Spoken or Typed Answer (Editable):</label>
+        <textarea id="q-answer-input" placeholder="Speak your answer or type here..." oninput="handleManualInput()"></textarea>
       </div>
     </div>
 
@@ -226,12 +240,12 @@
   <!-- SCREEN 5: TEACHER AUDIT DASHBOARD -->
   <div id="step-5" class="step">
     <h1>Teacher Audit Report</h1>
-    <div id="audit-header" style="margin-bottom: 20px; font-size: 16px;"></div>
+    <div id="audit-header" style="margin-bottom: 16px; font-size: 15px;"></div>
 
     <!-- AUDIO PLAYER -->
     <div class="audio-preview">
       <h3>🎙️ Recorded Student Audio</h3>
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Playback student audio to verify accuracy, WCPM, or question responses:</p>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Playback student audio to verify accuracy, WCPM, or question responses:</p>
       <audio id="audit-audio-player" controls style="width: 100%;"></audio>
     </div>
 
@@ -241,20 +255,24 @@
       <div class="metric-card"><div class="lbl">Accuracy</div><div class="val" id="res-accuracy">-</div></div>
       <div class="metric-card"><div class="lbl">WCPM</div><div class="val" id="res-wcpm">-</div></div>
       <div class="metric-card"><div class="lbl">Miscues</div><div class="val" id="res-miscues">-</div></div>
-      <div class="metric-card"><div class="lbl">Fluency Level</div><div class="val" id="res-fluency" style="font-size: 18px; margin-top:8px;">-</div></div>
+      <div class="metric-card"><div class="lbl">Fluency Level</div><div class="val" id="res-fluency" style="font-size: 16px; margin-top:6px;">-</div></div>
     </div>
+
+    <!-- MISCUE ANALYSIS BOX -->
+    <h4>Word-by-Word Miscue Alignment</h4>
+    <div class="miscue-box" id="miscue-analysis-display"></div>
 
     <!-- MATH EQUATION BREAKDOWN -->
     <h4>WCPM & Math Breakdown</h4>
     <div class="math-breakdown" id="wpm-math-display"></div>
 
     <!-- COMPREHENSION EVALUATION TABLE WITH TICKS & CROSSES -->
-    <h3 style="margin-top: 28px;">Comprehension Evaluation (<span id="res-comp-score"></span>)</h3>
+    <h3 style="margin-top: 24px;">Comprehension Evaluation (<span id="res-comp-score"></span>)</h3>
     <table>
       <thead>
         <tr>
-          <th style="width: 5%;">Score</th>
-          <th style="width: 35%;">Question</th>
+          <th style="width: 6%;">Score</th>
+          <th style="width: 34%;">Question</th>
           <th style="width: 40%;">Student Answer</th>
           <th style="width: 20%;">Auto-Evaluation</th>
         </tr>
@@ -262,8 +280,8 @@
       <tbody id="audit-comp-body"></tbody>
     </table>
 
-    <div style="margin-top: 28px; display: flex; gap: 12px;">
-      <button class="btn" onclick="window.print()">🖨️️ Print / Save PDF</button>
+    <div style="margin-top: 24px; display: flex; gap: 12px;">
+      <button class="btn" onclick="window.print()">🖨 Print / Save PDF</button>
       <button class="btn btn-secondary" onclick="location.reload()">Start New Assessment</button>
     </div>
   </div>
@@ -271,31 +289,41 @@
 </div>
 
 <script>
-  // STORIES DATA & KEY CONCEPTS
+  // EXACT UNABBREVIATED STORIES DATA & 1:1 QUESTION MATCHING
   const STORIES = {
     aotea: {
-      title: "Aotea (Great Barrier Island)",
-      text: "Dylan lives on Aotea, also known as Great Barrier Island. To get to Auckland, his family either takes a short flight or a long ferry ride across the sea. Dylan prefers flying because he gets nervous on deep water. Living on an island means energy comes from solar panels and water comes from rain tanks. Because food shipped from the mainland can be expensive, Dylan's family grows a big vegetable garden.",
+      title: "Life on Aotea",
+      htmlText: `
+        <h3>Life on Aotea</h3>
+        <p>Growing up on Aotea Great Barrier Island is fun. There's plenty to do: fishing, swimming, beachcombing, tramping. But there are challenges too. The island is off-grid, so people have to find their own water and make their own power. Some students from Okiwi School talk about life on the island.</p>
+        <h4>Dylan</h4>
+        <p>Aotea is about 90 kilometres from Auckland. I'd rather fly than go there on the ferry because I don't like being on deep, deep water. It also takes over four hours by boat, but only thirty minutes on a plane. It's expensive to buy food on Aotea because it's shipped from Auckland. Luckily, my family has a vegetable garden. We grow peppers, passionfruit, huge pumpkins - and my favourite, watermelon. We also grow tomatoes. When we have too many, we take them to school for the kids to eat.</p>
+      `,
+      rawText: "Growing up on Aotea Great Barrier Island is fun. There's plenty to do: fishing, swimming, beachcombing, tramping. But there are challenges too. The island is off-grid, so people have to find their own water and make their own power. Some students from Okiwi School talk about life on the island. Dylan Aotea is about 90 kilometres from Auckland. I'd rather fly than go there on the ferry because I don't like being on deep, deep water. It also takes over four hours by boat, but only thirty minutes on a plane. It's expensive to buy food on Aotea because it's shipped from Auckland. Luckily, my family has a vegetable garden. We grow peppers, passionfruit, huge pumpkins - and my favourite, watermelon. We also grow tomatoes. When we have too many, we take them to school for the kids to eat.",
       questions: [
-        { id: "q1", type: "Retelling", text: "Retell the main points of the story in detail.", points: 3 },
-        { id: "q2", type: "Literal", text: "How far or how do people travel from Aotea to Auckland?", key: ["flight", "plane", "ferry", "boat", "90"] },
-        { id: "q3", type: "Literal", text: "Name 2 activities or ways island living works on Aotea.", key: ["solar", "rain", "garden", "vegetable", "ferry", "flight"] },
-        { id: "q4", type: "Literal", text: "Why does Dylan prefer to fly instead of taking the ferry?", key: ["deep water", "nervous", "water", "sea"] },
-        { id: "q5", type: "Vocabulary", text: "What does living off-grid or using solar/rain tanks mean?", key: ["not connected", "power", "water", "own", "panels", "rain"] },
-        { id: "q6", type: "Inference", text: "How does having a vegetable garden help Dylan’s family?", key: ["expensive", "cheaper", "cost", "save", "food"] },
-        { id: "q7", type: "Evaluative", text: "Do you think living on Aotea would be easy or hard? Why?", key: ["easy", "hard", "because"] },
-        { id: "q8", type: "Evaluative", text: "Would you like to live on Aotea Great Barrier Island? Why/Why not?", key: ["yes", "no", "because"] }
+        { id: "q1", type: "Retelling", text: "Retell the main points in detail?", key: ["aotea", "island", "fly", "ferry", "garden", "off-grid"] },
+        { id: "q2", type: "Literal", text: "How far is Aotea from Auckland?", key: ["90", "90km", "kilometres", "ninety"] },
+        { id: "q3", type: "Literal", text: "Name 2 activities people can do on the island?", key: ["fishing", "swimming", "beachcombing", "tramping"] },
+        { id: "q4", type: "Literal", text: "Why does Dylan prefer to fly instead of taking the ferry?", key: ["deep water", "deep", "water", "like being on deep"] },
+        { id: "q5", type: "Vocabulary", text: "What does 'off-grid' mean?", key: ["not connected", "power", "water", "own", "systems"] },
+        { id: "q6", type: "Inference", text: "How does having a vegetable garden help Dylan's family?", key: ["expensive", "cheaper", "cost", "shipped", "money", "save"] },
+        { id: "q7", type: "Evaluative", text: "Do you think living on Aotea would be easy or hard? Why?", key: ["easy", "hard"] },
+        { id: "q8", type: "Evaluative", text: "Would you like to live on Aotea Great Barrier Island? Why/Why not?", key: ["yes", "no"] }
       ]
     },
     funrun: {
       title: "The Fun Run",
-      text: "Sam stood at the starting line, his heart thumping in his chest. Today was the school fun run, and everyone was excited. When the whistle blew, the runners surged forward. Halfway through the race, Poppy tripped over a tree root and fell onto the grass. Tammy stopped running right away to help her up, even though it meant losing her lead. Behind them, Bobby ran with a wide smile, just enjoying the fun.",
+      htmlText: `
+        <h3>The Fun Run</h3>
+        <p>Sam stood at the starting line, his heart thumping in his chest. Today was the school fun run, and everyone was excited. When the whistle blew, the runners surged forward. Halfway through the race, Poppy tripped over a tree root and fell onto the grass. Tammy stopped running right away to help her up, even though it meant losing her lead. Behind them, Bobby ran with a wide smile, just enjoying the fun.</p>
+      `,
+      rawText: "Sam stood at the starting line, his heart thumping in his chest. Today was the school fun run, and everyone was excited. When the whistle blew, the runners surged forward. Halfway through the race, Poppy tripped over a tree root and fell onto the grass. Tammy stopped running right away to help her up, even though it meant losing her lead. Behind them, Bobby ran with a wide smile, just enjoying the fun.",
       questions: [
-        { id: "q1", type: "Retelling", text: "Retell the main points of the story in detail.", points: 3 },
-        { id: "q2", type: "Literal", text: "What happens to Poppy during the run?", key: ["tripped", "fell", "root", "grass", "hurt"] },
-        { id: "q3", type: "Vocabulary", text: "What does 'thumping' mean when describing Sam’s chest?", key: ["heart", "beating", "fast", "racing", "pounding"] },
-        { id: "q4", type: "Inference", text: "Why is Bobby smiling even though he is at the back?", key: ["having fun", "enjoying", "didn't care", "winning", "happy"] },
-        { id: "q5", type: "Evaluative", text: "Do you think Tammy made the right choice to stop and help Poppy? Why/Why not?", key: ["yes", "no", "right", "wrong", "because"] }
+        { id: "q1", type: "Retelling", text: "Retell the main points of the story in detail?", key: ["run", "sam", "poppy", "tripped", "tammy", "bobby"] },
+        { id: "q2", type: "Literal", text: "What happens to Poppy during the run?", key: ["tripped", "fell", "root", "grass"] },
+        { id: "q3", type: "Vocabulary", text: "What does 'thumping' mean when describing Sam's chest?", key: ["heart", "beating", "fast", "racing", "pounding"] },
+        { id: "q4", type: "Inference", text: "Why is Bobby smiling even though he is at the back?", key: ["fun", "enjoying", "happy"] },
+        { id: "q5", type: "Evaluative", text: "Do you think Tammy made the right choice to stop and help Poppy? Why/Why not?", key: ["yes", "no", "right"] }
       ]
     }
   };
@@ -338,7 +366,8 @@
   async function testMicPermissions() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      document.getElementById("mic-test-status").innerText = "Status: Microphone detected & active!";
+      document.getElementById("mic-test-status").innerText = "Status: Microphone active!";
+      document.getElementById("btn-test-rec").style.display = "inline-block";
       document.getElementById("btn-to-reading").style.display = "inline-block";
 
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -367,8 +396,27 @@
     }
   }
 
+  function recordAudioSample() {
+    let testChunks = [];
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const testRecorder = new MediaRecorder(stream);
+      testRecorder.ondataavailable = e => testChunks.push(e.data);
+      testRecorder.onstop = () => {
+        const blob = new Blob(testChunks, { type: 'audio/webm' });
+        document.getElementById("sample-audio-player").src = URL.createObjectURL(blob);
+        document.getElementById("sample-audio-container").style.display = "block";
+      };
+      testRecorder.start();
+      document.getElementById("mic-test-status").innerText = "Recording 3-second sample...";
+      setTimeout(() => {
+        testRecorder.stop();
+        document.getElementById("mic-test-status").innerText = "Sample recorded! Click play below to test sound.";
+      }, 3000);
+    });
+  }
+
   function goToStep3() {
-    document.getElementById("passage-text").innerText = selectedStory.text;
+    document.getElementById("passage-text").innerHTML = selectedStory.htmlText;
     document.getElementById("step-2").classList.remove("active");
     document.getElementById("step-3").classList.add("active");
   }
@@ -450,31 +498,49 @@
     if (!SpeechRecognition) return;
 
     const qRec = new SpeechRecognition();
+    qRec.continuous = false;
+    qRec.interimResults = true;
     qRec.lang = 'en-NZ';
+
     qRec.onresult = (e) => {
-      const ans = e.results[0][0].transcript;
-      const currentVal = document.getElementById("q-answer-input").value;
-      const newVal = currentVal ? `${currentVal} ${ans}` : ans;
+      let finalAns = "";
+      for (let i = 0; i < e.results.length; i++) {
+        finalAns += e.results[i][0].transcript;
+      }
+      const currentVal = studentAnswers[currentQIndex] || "";
+      const newVal = currentVal ? `${currentVal} ${finalAns}` : finalAns;
       
       document.getElementById("q-answer-input").value = newVal;
-      studentAnswers[currentQIndex] = newVal;
-      btn.innerText = "🎤 Speak Answer";
-
-      // Elaboration Prompt Safeguard
-      checkElaborationPrompt(newVal);
     };
+
+    qRec.onend = () => {
+      btn.innerText = "🎤 Speak Answer";
+      const finalVal = document.getElementById("q-answer-input").value.trim();
+      studentAnswers[currentQIndex] = finalVal;
+      checkElaborationPrompt(finalVal);
+    };
+
     qRec.onerror = () => { btn.innerText = "🎤 Speak Answer"; };
     qRec.start();
   }
 
+  function handleManualInput() {
+    const val = document.getElementById("q-answer-input").value;
+    studentAnswers[currentQIndex] = val;
+  }
+
   function checkElaborationPrompt(text) {
-    const words = text.trim().split(/\s+/).length;
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
     const clean = text.toLowerCase();
-    
-    // Trigger prompt if answer is under 4 words or missing 'because' on evaluative items
     const q = selectedStory.questions[currentQIndex];
-    if (words < 4 || (q.type === "Evaluative" && !clean.includes("because"))) {
+
+    const needsElaboration = (words > 0 && words < 4) || (q.type === "Evaluative" && !clean.includes("because"));
+
+    if (needsElaboration) {
       document.getElementById("prompt-box").style.display = "block";
+      const promptUtterance = new SpeechSynthesisUtterance("Could you tell me a little bit more or explain why?");
+      promptUtterance.lang = 'en-NZ';
+      window.speechSynthesis.speak(promptUtterance);
     } else {
       document.getElementById("prompt-box").style.display = "none";
     }
@@ -508,15 +574,25 @@
       mediaRecorder.stop();
     }
 
-    const totalWords = selectedStory.text.split(/\s+/).length;
+    const storyWords = selectedStory.rawText.split(/\s+/);
+    const totalWords = storyWords.length;
     const rawWpm = Math.round((totalWords / durationSec) * 60);
 
-    // Omission tracking via text alignment
+    // Miscue analysis & alignment
     const spokenWords = rawTranscript.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
     let Omissions = 0;
-    selectedStory.text.split(/\s+/).forEach(w => {
+    let miscueHtml = "";
+
+    storyWords.forEach(w => {
       const clean = w.toLowerCase().replace(/[^a-z0-9]/g, "");
-      if (clean && !spokenWords.includes(clean)) Omissions++;
+      if (clean && spokenWords.includes(clean)) {
+        miscueHtml += `<span class="word-match">${w}</span> `;
+      } else if (clean) {
+        Omissions++;
+        miscueHtml += `<span class="word-omitted">${w}</span> `;
+      } else {
+        miscueHtml += `${w} `;
+      }
     });
 
     const wordsCorrect = Math.max(0, totalWords - Omissions);
@@ -539,6 +615,8 @@
     document.getElementById("res-wcpm").innerText = `${wcpm}`;
     document.getElementById("res-miscues").innerText = `${Omissions}`;
     document.getElementById("res-fluency").innerText = fluency;
+
+    document.getElementById("miscue-analysis-display").innerHTML = miscueHtml;
 
     // Formula Breakdown Display
     document.getElementById("wpm-math-display").innerHTML = `
@@ -599,10 +677,10 @@
         if (clean.includes(k.toLowerCase())) matches++;
       });
 
-      if (matches >= 2 || (matches >= 1 && wordCount >= 6)) {
+      if (matches >= 2 || (matches >= 1 && wordCount >= 5)) {
         return { icon: "✔", status: "Correct", color: "var(--success)", cssClass: "tick-pass" };
       } else if (matches === 1) {
-        return { icon: "⚠️", status: "Partial Concept Match", color: "var(--warning)", cssClass: "tick-warn" };
+        return { icon: "⚠️", status: "Partial Match", color: "var(--warning)", cssClass: "tick-warn" };
       }
     }
 
