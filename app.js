@@ -303,11 +303,10 @@ function setupScreen4() {
         resetSilenceTimer(txtArea.value);
       }
       
-      // Silence detection: reset timer whenever new speech arrives
       if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
       speechSilenceTimer = setTimeout(() => {
         if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
-      }, 3500); // Turns off 3.5s after speech pauses
+      }, 3500);
     };
 
     speechRecognizer.onend = () => {
@@ -343,7 +342,7 @@ function setupScreen4() {
       if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
       speechSilenceTimer = setTimeout(() => {
         if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
-      }, 6000); // Initial 6s timeout only if no initial speech detected
+      }, 6000);
     });
   }
 
@@ -550,28 +549,42 @@ function populateAuditScreen() {
       const partials = (sg.partialAnswers || []).map(p => p.toLowerCase());
       const keyIdeas = (sg.keyIdeas || []).map(k => k.toLowerCase());
 
+      const stopWords = ["with", "from", "that", "this", "they", "them", "have", "would", "because", "their", "there", "about"];
+
       if (cleanedAns.length > 0) {
+        // 1. RETELL QUESTIONS
         if (q.type === "retell" && keyIdeas.length > 0) {
-          let matchedIdeas = 0;
+          let matchedDistinctIdeas = 0;
           keyIdeas.forEach(idea => {
-            const ideaKeywords = idea.split(" ").filter(w => w.length > 3);
-            const matches = ideaKeywords.filter(kw => cleanedAns.includes(kw));
-            if (matches.length >= 2) matchedIdeas++;
-          });
-          if (matchedIdeas >= (sg.requiredKeyIdeasCount || 3)) {
-            autoMark = 1.0;
-          } else if (matchedIdeas >= 1) {
-            autoMark = 0.5;
-          }
-        } 
-        else {
-          const isFullMatch = acceptable.some(target => {
-            const coreWords = target.split(" ").filter(w => w.length > 2);
-            return coreWords.some(w => cleanedAns.includes(w));
+            const ideaKeywords = idea.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !stopWords.includes(w));
+            const matchCount = ideaKeywords.filter(kw => cleanedAns.includes(kw)).length;
+            if (matchCount >= 2) matchedDistinctIdeas++;
           });
 
+          const requiredCount = sg.requiredKeyIdeasCount || 3;
+          if (matchedDistinctIdeas >= requiredCount) {
+            autoMark = 1.0;
+          } else if (matchedDistinctIdeas >= 1) {
+            autoMark = 0.5;
+          } else {
+            autoMark = 0.0;
+          }
+        } 
+        // 2. ALL OTHER QUESTIONS (Literal, Vocabulary, Inferential, Evaluative/Reaction)
+        else {
+          // Check Full Credit Match (Requires exact phrase OR at least 2 distinct key words)
+          const isFullMatch = acceptable.some(target => {
+            if (cleanedAns.includes(target)) return true; // Exact phrase match
+            const coreWords = target.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
+            if (coreWords.length <= 1) return coreWords.some(w => cleanedAns.includes(w));
+            const matchCount = coreWords.filter(w => cleanedAns.includes(w)).length;
+            return matchCount >= 2; // Requires at least 2 core words for multi-word targets
+          });
+
+          // Check Partial Credit Match
           const isPartialMatch = partials.some(target => {
-            const coreWords = target.split(" ").filter(w => w.length > 2);
+            if (cleanedAns.includes(target)) return true;
+            const coreWords = target.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
             return coreWords.some(w => cleanedAns.includes(w));
           });
 
@@ -580,12 +593,20 @@ function populateAuditScreen() {
           } else if (isPartialMatch) {
             autoMark = 0.5;
           } else {
-            autoMark = 0.0;
+            autoMark = 0.0; // Random inputs like "popsicle" or single wrong words fail
           }
         }
       }
 
       currentAssessment.scores[idx] = autoMark;
+
+      let rubricDetailsText = "";
+      if (q.type === "retell" && keyIdeas.length > 0) {
+        rubricDetailsText = `<strong>Required Key Ideas (3 for 1.0):</strong><br>• ${keyIdeas.join('<br>• ')}`;
+      } else {
+        if (acceptable.length > 0) rubricDetailsText += `<strong>Full Credit (1.0):</strong> ${acceptable.join(' / ')}<br>`;
+        if (partials.length > 0) rubricDetailsText += `<strong>Partial (0.5):</strong> ${partials.join(' / ')}`;
+      }
 
       const card = document.createElement("div");
       card.style.cssText = "background:#fff; padding:12px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;";
@@ -597,12 +618,19 @@ function populateAuditScreen() {
           <button class="${autoMark === 0.5 ? 'active-warn' : ''}" onclick="setScore(${idx}, 0.5, this)">⚠️ Partial (0.5)</button>
           <button class="${autoMark === 0.0 ? 'active-fail' : ''}" onclick="setScore(${idx}, 0.0, this)">✘ Incorrect (0.0)</button>
         </div>
+        <span class="rubric-toggle-link" onclick="toggleRubricKey('rubric-box-${idx}')">👁️ View Rubric Answer Key</span>
+        <div id="rubric-box-${idx}" class="rubric-key-box hidden">${rubricDetailsText}</div>
       `;
       list.appendChild(card);
     });
   }
 
   recalculateMetrics();
+}
+
+function toggleRubricKey(boxId) {
+  const box = document.getElementById(boxId);
+  if (box) box.classList.toggle("hidden");
 }
 
 function setScore(qIdx, mark, btn) {
@@ -647,6 +675,12 @@ function recalculateMetrics() {
   document.getElementById("calculated-comp").innerText = compScore + "%";
 
   const targetBenchmark = currentAssessment.selectedStory ? (WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80) : 80;
+  
+  const benchBadge = document.getElementById("target-benchmark-badge");
+  if (benchBadge) {
+    benchBadge.innerText = `Year ${currentAssessment.selectedStory ? currentAssessment.selectedStory.yearLevel : ''} Benchmark Target: ${targetBenchmark} WCPM`;
+  }
+
   let profile = "Secure Reader";
   let verdict = "PASS";
   let profileBg = "#dcfce7";
