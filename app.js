@@ -549,7 +549,7 @@ function populateAuditScreen() {
       const partials = (sg.partialAnswers || []).map(p => p.toLowerCase());
       const keyIdeas = (sg.keyIdeas || []).map(k => k.toLowerCase());
 
-      const stopWords = ["with", "from", "that", "this", "they", "them", "have", "would", "because", "their", "there", "about"];
+      const stopWords = ["so", "the", "are", "always", "they", "them", "with", "from", "that", "this", "have", "would", "because", "their", "there", "about"];
 
       if (cleanedAns.length > 0) {
         // 1. RETELL QUESTIONS
@@ -570,18 +570,24 @@ function populateAuditScreen() {
             autoMark = 0.0;
           }
         } 
-        // 2. ALL OTHER QUESTIONS (Literal, Vocabulary, Inferential, Evaluative/Reaction)
+        // 2. ALL OTHER QUESTIONS (Strict required noun validation)
         else {
-          // Check Full Credit Match (Requires exact phrase OR at least 2 distinct key words)
           const isFullMatch = acceptable.some(target => {
-            if (cleanedAns.includes(target)) return true; // Exact phrase match
+            if (cleanedAns.includes(target)) return true; // Direct phrase match
+            
             const coreWords = target.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
-            if (coreWords.length <= 1) return coreWords.some(w => cleanedAns.includes(w));
+            if (coreWords.length === 0) return false;
+
+            // Extract the critical topic noun (e.g. "flowers" from "close to lots of flowers")
+            const requiredKeyNoun = coreWords[coreWords.length - 1];
+            const hasRequiredNoun = cleanedAns.includes(requiredKeyNoun);
+
+            if (!hasRequiredNoun) return false; // Fail immediately if main noun is missing (e.g. "candy" instead of "flowers")
+
             const matchCount = coreWords.filter(w => cleanedAns.includes(w)).length;
-            return matchCount >= 2; // Requires at least 2 core words for multi-word targets
+            return matchCount >= Math.min(2, coreWords.length);
           });
 
-          // Check Partial Credit Match
           const isPartialMatch = partials.some(target => {
             if (cleanedAns.includes(target)) return true;
             const coreWords = target.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
@@ -593,7 +599,7 @@ function populateAuditScreen() {
           } else if (isPartialMatch) {
             autoMark = 0.5;
           } else {
-            autoMark = 0.0; // Random inputs like "popsicle" or single wrong words fail
+            autoMark = 0.0;
           }
         }
       }
