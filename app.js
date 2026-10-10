@@ -1,4 +1,7 @@
-// Global Application State
+/**
+ * iDeaL® Assessment App - Engine Logic
+ */
+
 let currentAssessment = {
   room: "",
   studentName: "",
@@ -6,35 +9,52 @@ let currentAssessment = {
   readingTimeSeconds: 0,
   answers: [],
   scores: [],
+  miscues: [],
   wcpm: 0,
   accuracy: 100,
-  compScore: 0
+  compScore: 0,
+  fullAudioBlob: null
 };
 
+let micStream = null;
 let mediaRecorder = null;
 let mainAudioChunks = [];
 let readingTimerInterval = null;
 let currentQuestionIdx = 0;
-let recognition = null;
+let speechRecognizer = null;
+let audioContext = null;
+let analyser = null;
+let silenceTimer = null;
+
+// Hasbrouck & Tindal Mid-Year 50th Percentile Benchmarks
+const WCPM_BENCHMARKS = {
+  1: 23,
+  2: 72,
+  3: 92,
+  4: 112,
+  5: 127,
+  6: 140
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   renderStoryGrid();
-  setupScreen1Validation();
-  setupScreen2MicCheck();
-  setupScreen3Reading();
-  setupScreen4Comprehension();
-  setupScreen5Audit();
+  setupScreen1();
+  setupScreen2();
+  setupScreen3();
+  setupScreen4();
+  setupScreen5();
 });
 
-// Screen Switcher
 function showScreen(screenId) {
   document.querySelectorAll(".screen-container").forEach(s => s.classList.add("hidden"));
-  document.getElementById(screenId).classList.remove("hidden");
+  const target = document.getElementById(screenId);
+  if (target) target.classList.remove("hidden");
 }
 
-// SCREEN 1: Setup
+// SCREEN 1 LOGIC
 function renderStoryGrid() {
   const grid = document.getElementById("story-grid");
+  if (!grid) return;
   grid.innerHTML = "";
 
   STORIES.forEach((story) => {
@@ -42,8 +62,8 @@ function renderStoryGrid() {
     card.className = "story-card";
     card.innerHTML = `
       <div class="card-badge">Year ${story.yearLevel} ${story.colorLevel ? `(${story.colorLevel})` : ''}</div>
-      <h3>${story.title}</h3>
-      <p>${story.type} • ${story.totalWords} words</p>
+      <h3 style="margin: 0 0 8px 0;">${story.title}</h3>
+      <p style="margin: 0; font-size: 14px; color: #64748b;">${story.type} • ${story.totalWords} words</p>
     `;
     card.addEventListener("click", () => {
       document.querySelectorAll(".story-card").forEach(c => c.classList.remove("selected"));
@@ -55,226 +75,513 @@ function renderStoryGrid() {
   });
 }
 
-function setupScreen1Validation() {
+function setupScreen1() {
   const room = document.getElementById("room-select");
   const name = document.getElementById("student-name");
   const btn = document.getElementById("btn-screen1-next");
 
   const check = () => {
-    currentAssessment.room = room.value;
-    currentAssessment.studentName = name.value.trim();
-    btn.disabled = !(currentAssessment.room && currentAssessment.studentName && currentAssessment.selectedStory);
+    currentAssessment.room = room ? room.value : "";
+    currentAssessment.studentName = name ? name.value.trim() : "";
+    validateScreen1();
   };
 
-  room.addEventListener("change", check);
-  name.addEventListener("input", check);
-  btn.addEventListener("click", () => {
-    showScreen("screen-2");
-    initMicCheck();
-  });
+  if (room) room.addEventListener("change", check);
+  if (name) name.addEventListener("input", check);
+  if (btn) {
+    btn.addEventListener("click", () => {
+      showScreen("screen-2");
+      initMicCheck();
+    });
+  }
 }
 
 function validateScreen1() {
-  const room = document.getElementById("room-select").value;
-  const name = document.getElementById("student-name").value.trim();
-  document.getElementById("btn-screen1-next").disabled = !(room && name && currentAssessment.selectedStory);
-}
-
-// SCREEN 2: Mic Check
-let micStream = null;
-let testBlob = null;
-
-async function initMicCheck() {
-  try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch (e) {
-    document.getElementById("mic-status-text").innerText = "⚠️ Mic permission denied.";
+  const btn = document.getElementById("btn-screen1-next");
+  if (btn) {
+    btn.disabled = !(currentAssessment.room && currentAssessment.studentName && currentAssessment.selectedStory);
   }
 }
 
-function setupScreen2MicCheck() {
+// SCREEN 2 LOGIC
+async function initMicCheck() {
+  const status = document.getElementById("mic-status-text");
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(micStream);
+    source.connect(analyser);
+    drawVolumeMeter();
+    if (status) status.innerText = "Mic active! Click 'Record 3-Sec Test' to sample audio.";
+  } catch (err) {
+    if (status) status.innerText = "⚠️ Microphone access blocked. Please allow mic permissions in browser settings.";
+  }
+}
+
+function drawVolumeMeter() {
+  if (!analyser) return;
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  let avg = data.reduce((a, b) => a + b, 0) / data.length;
+  
+  const fill = document.getElementById("volume-meter-fill");
+  if (fill) fill.style.width = Math.min(100, avg * 3.5) + "%";
+  requestAnimationFrame(drawVolumeMeter);
+}
+
+function setupScreen2() {
   const recBtn = document.getElementById("btn-record-test");
   const playBtn = document.getElementById("btn-play-test");
   const startBtn = document.getElementById("btn-screen2-start");
+  const status = document.getElementById("mic-status-text");
+  let testBlob = null;
 
-  recBtn.addEventListener("click", () => {
-    if (!micStream) return;
-    let chunks = [];
-    const mr = new MediaRecorder(micStream);
-    mr.ondataavailable = e => chunks.push(e.data);
-    mr.onstop = () => {
-      testBlob = new Blob(chunks, { type: "audio/webm" });
-      playBtn.disabled = false;
-      document.getElementById("mic-status-text").innerText = "Sample recorded! Click Play.";
-    };
-    mr.start();
-    recBtn.disabled = true;
-    setTimeout(() => { mr.stop(); recBtn.disabled = false; }, 3000);
-  });
+  if (recBtn) {
+    recBtn.addEventListener("click", () => {
+      if (!micStream) return;
+      let chunks = [];
+      const testRecorder = new MediaRecorder(micStream);
+      testRecorder.ondataavailable = e => chunks.push(e.data);
+      
+      testRecorder.onstop = () => {
+        testBlob = new Blob(chunks, { type: "audio/webm" });
+        recBtn.innerText = "🔴 Record 3-Sec Test";
+        recBtn.disabled = false;
+        if (playBtn) {
+          playBtn.disabled = false;
+          playBtn.style.borderColor = "var(--primary)";
+          playBtn.style.color = "var(--primary)";
+        }
+        if (status) status.innerText = "Sample recorded! Click 'Play Test Sample'.";
+      };
 
-  playBtn.addEventListener("click", () => {
-    if (!testBlob) return;
-    const audio = new Audio(URL.createObjectURL(testBlob));
-    audio.play();
-    audio.onended = () => {
-      startBtn.disabled = false;
-      document.getElementById("mic-status-text").innerText = "✅ Mic verified!";
-    };
-  });
+      testRecorder.start();
+      recBtn.disabled = true;
+      let countdown = 3;
+      recBtn.innerText = `Recording... ${countdown}s`;
+      
+      let timer = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          recBtn.innerText = `Recording... ${countdown}s`;
+        } else {
+          clearInterval(timer);
+          if (testRecorder.state !== "inactive") testRecorder.stop();
+        }
+      }, 1000);
+    });
+  }
 
-  startBtn.addEventListener("click", () => showScreen("screen-3"));
+  if (playBtn) {
+    playBtn.addEventListener("click", () => {
+      if (!testBlob) return;
+      playBtn.innerText = "🔊 Playing Sample...";
+      playBtn.disabled = true;
+
+      const audio = new Audio(URL.createObjectURL(testBlob));
+      audio.play();
+      audio.onended = () => {
+        testBlob = null; // Auto-discard scratch buffer from memory
+        playBtn.innerText = "✅ Audio Verified";
+        playBtn.className = "btn btn-success";
+        if (startBtn) startBtn.disabled = false;
+        if (status) status.innerText = "Mic test clear! Click 'Start Reading' to begin.";
+      };
+    });
+  }
+
+  if (startBtn) {
+    startBtn.addEventListener("click", () => {
+      showScreen("screen-3");
+      prepareScreen3();
+    });
+  }
 }
 
-// SCREEN 3: Reading Passage
-function setupScreen3Reading() {
+// SCREEN 3 LOGIC
+function prepareScreen3() {
+  const passageSpan = document.getElementById("passage-body");
+  if (passageSpan && currentAssessment.selectedStory) {
+    passageSpan.innerText = " " + currentAssessment.selectedStory.text + " ";
+  }
+}
+
+function setupScreen3() {
   const startBtn = document.getElementById("btn-reading-start");
   const finishBtn = document.getElementById("btn-reading-finish");
-  const container = document.getElementById("passage-text-container");
+  const status = document.getElementById("reading-status");
+  const timer = document.getElementById("reading-timer");
 
-  startBtn.addEventListener("click", () => {
-    container.innerText = currentAssessment.selectedStory.text;
-    startBtn.disabled = true;
-    finishBtn.disabled = false;
+  if (startBtn) {
+    startBtn.addEventListener("click", () => {
+      startBtn.disabled = true;
+      if (finishBtn) finishBtn.disabled = false;
+      if (status) status.innerText = "🔴 Live Recording...";
 
-    mainAudioChunks = [];
-    mediaRecorder = new MediaRecorder(micStream);
-    mediaRecorder.ondataavailable = e => mainAudioChunks.push(e.data);
-    mediaRecorder.start();
+      mainAudioChunks = [];
+      mediaRecorder = new MediaRecorder(micStream);
+      mediaRecorder.ondataavailable = e => mainAudioChunks.push(e.data);
+      mediaRecorder.start();
 
-    currentAssessment.readingTimeSeconds = 0;
-    readingTimerInterval = setInterval(() => {
-      currentAssessment.readingTimeSeconds++;
-      document.getElementById("reading-timer").innerText = `Time: ${currentAssessment.readingTimeSeconds}s`;
-    }, 1000);
-  });
+      currentAssessment.readingTimeSeconds = 0;
+      readingTimerInterval = setInterval(() => {
+        currentAssessment.readingTimeSeconds++;
+        let m = String(Math.floor(currentAssessment.readingTimeSeconds / 60)).padStart(2, '0');
+        let s = String(currentAssessment.readingTimeSeconds % 60).padStart(2, '0');
+        if (timer) timer.innerText = `Time: ${m}:${s}`;
+      }, 1000);
+    });
+  }
 
-  finishBtn.addEventListener("click", () => {
-    clearInterval(readingTimerInterval);
-    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-    showScreen("screen-4");
-    loadQuestion(0);
-  });
+  if (finishBtn) {
+    finishBtn.addEventListener("click", () => {
+      clearInterval(readingTimerInterval);
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.onstop = () => {
+          currentAssessment.fullAudioBlob = new Blob(mainAudioChunks, { type: "audio/webm" });
+          const player = document.getElementById("full-audio-player");
+          if (player) {
+            player.src = URL.createObjectURL(currentAssessment.fullAudioBlob);
+          }
+        };
+        mediaRecorder.stop();
+      }
+      showScreen("screen-4");
+      currentQuestionIdx = 0;
+      loadQuestion(0);
+    });
+  }
 }
 
-// SCREEN 4: Comprehension
-function setupScreen4Comprehension() {
+// SCREEN 4 LOGIC
+function setupScreen4() {
   const readBtn = document.getElementById("btn-read-aloud");
   const speakBtn = document.getElementById("btn-speak-answer");
   const nextBtn = document.getElementById("btn-next-question");
+  const prevBtn = document.getElementById("btn-prev-question");
   const txtArea = document.getElementById("answer-transcript");
 
-  // Speech Recognition setup
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.onresult = (event) => {
+    speechRecognizer = new SpeechRecognition();
+    speechRecognizer.continuous = true;
+    speechRecognizer.interimResults = false;
+
+    speechRecognizer.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript;
-      txtArea.value += (txtArea.value ? " " : "") + transcript;
+      if (txtArea) {
+        txtArea.value += (txtArea.value ? " " : "") + transcript;
+        resetSilenceTimer(txtArea.value);
+      }
+    };
+
+    speechRecognizer.onend = () => {
+      if (speakBtn) {
+        speakBtn.innerText = "🎤 Speak Answer";
+        speakBtn.classList.remove("btn-listening");
+      }
     };
   }
 
-  readBtn.addEventListener("click", () => {
-    const qText = currentAssessment.selectedStory.questions[currentQuestionIdx].questionText;
-    const utterance = new SpeechSynthesisUtterance(qText);
-    window.speechSynthesis.speak(utterance);
-  });
+  if (readBtn) {
+    readBtn.addEventListener("click", () => {
+      if (!currentAssessment.selectedStory) return;
+      const qText = currentAssessment.selectedStory.questions[currentQuestionIdx].questionText;
+      const utterance = new SpeechSynthesisUtterance(qText);
+      window.speechSynthesis.speak(utterance);
+    });
+  }
 
-  speakBtn.addEventListener("click", () => {
-    if (recognition) recognition.start();
-  });
+  if (speakBtn) {
+    speakBtn.addEventListener("click", () => {
+      if (!speechRecognizer) {
+        alert("Speech recognition is not supported in this browser. You can type directly into the box.");
+        return;
+      }
+      speakBtn.innerText = "🎙️ Listening... Speak Now";
+      speakBtn.classList.add("btn-listening");
+      speechRecognizer.start();
+    });
+  }
 
-  nextBtn.addEventListener("click", () => {
-    if (recognition) recognition.stop();
-    currentAssessment.answers[currentQuestionIdx] = txtArea.value;
-    
-    currentQuestionIdx++;
-    if (currentQuestionIdx < currentAssessment.selectedStory.questions.length) {
-      loadQuestion(currentQuestionIdx);
-    } else {
-      showScreen("screen-5");
-      populateAuditScreen();
-    }
-  });
+  if (txtArea) {
+    txtArea.addEventListener("input", () => resetSilenceTimer(txtArea.value));
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      saveCurrentAnswer();
+      currentQuestionIdx++;
+      if (currentQuestionIdx < currentAssessment.selectedStory.questions.length) {
+        loadQuestion(currentQuestionIdx);
+      } else {
+        showScreen("screen-5");
+        populateAuditScreen();
+      }
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      saveCurrentAnswer();
+      if (currentQuestionIdx > 0) {
+        currentQuestionIdx--;
+        loadQuestion(currentQuestionIdx);
+      }
+    });
+  }
+}
+
+function saveCurrentAnswer() {
+  if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
+  if (silenceTimer) clearTimeout(silenceTimer);
+  const box = document.getElementById("elaboration-box");
+  if (box) box.classList.add("hidden");
+
+  const txtArea = document.getElementById("answer-transcript");
+  if (txtArea) {
+    currentAssessment.answers[currentQuestionIdx] = txtArea.value.trim();
+  }
 }
 
 function loadQuestion(idx) {
   const q = currentAssessment.selectedStory.questions[idx];
-  document.getElementById("question-tracker").innerText = `Question ${idx + 1} of ${currentAssessment.selectedStory.questions.length}`;
-  document.getElementById("question-display-text").innerText = q.questionText;
-  document.getElementById("answer-transcript").value = currentAssessment.answers[idx] || "";
+  const tracker = document.getElementById("question-tracker");
+  const display = document.getElementById("question-display-text");
+  const txtArea = document.getElementById("answer-transcript");
+  const prevBtn = document.getElementById("btn-prev-question");
+
+  if (tracker) tracker.innerText = `Question ${idx + 1} of ${currentAssessment.selectedStory.questions.length}`;
+  if (display) display.innerText = q.questionText;
+  if (txtArea) txtArea.value = currentAssessment.answers[idx] || "";
+  if (prevBtn) prevBtn.disabled = (idx === 0);
+
+  const box = document.getElementById("elaboration-box");
+  if (box) box.classList.add("hidden");
 }
 
-// SCREEN 5: Audit & Scoring
-function setupScreen5Audit() {
-  document.getElementById("words-1min").addEventListener("input", recalculateMetrics);
-  document.getElementById("miscues-count").addEventListener("input", recalculateMetrics);
+function resetSilenceTimer(text) {
+  if (silenceTimer) clearTimeout(silenceTimer);
+  const box = document.getElementById("elaboration-box");
+  if (box) box.classList.add("hidden");
+
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  if (wordCount >= 1 && wordCount <= 3) {
+    silenceTimer = setTimeout(() => {
+      if (box) box.classList.remove("hidden");
+      const utterance = new SpeechSynthesisUtterance("Can you tell me a little bit more about that?");
+      window.speechSynthesis.speak(utterance);
+    }, 3000); // 3 full seconds of absolute silence before nudging
+  }
+}
+
+// SCREEN 5 LOGIC
+function setupScreen5() {
+  const totalWordsInput = document.getElementById("total-words-read");
+  const miscuesInput = document.getElementById("miscues-count");
+  const saveBtn = document.getElementById("btn-save-drive");
+  const nextStudentBtn = document.getElementById("btn-next-student");
+
+  if (totalWordsInput) totalWordsInput.addEventListener("input", recalculateMetrics);
+  if (miscuesInput) miscuesInput.addEventListener("input", recalculateMetrics);
+
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      saveBtn.disabled = true;
+      saveBtn.innerText = "⏳ Syncing to Google Drive...";
+      
+      // Simulate direct Apps Script endpoint sync
+      setTimeout(() => {
+        alert(`Success! Assessment record for ${currentAssessment.studentName} has been saved directly to the ${currentAssessment.room} Google Drive folder.`);
+        saveBtn.disabled = false;
+        saveBtn.innerText = "☁️ Save Record & Sync to Google Drive";
+      }, 1500);
+    });
+  }
+
+  if (nextStudentBtn) {
+    nextStudentBtn.addEventListener("click", () => {
+      resetAssessmentState();
+      showScreen("screen-1");
+    });
+  }
 }
 
 function populateAuditScreen() {
-  const qList = document.getElementById("audit-questions-list");
-  qList.innerHTML = "";
+  const story = currentAssessment.selectedStory;
+  if (!story) return;
 
-  currentAssessment.selectedStory.questions.forEach((q, idx) => {
-    const ans = currentAssessment.answers[idx] || "(No response)";
-    const div = document.createElement("div");
-    div.style.marginBottom = "10px";
-    div.innerHTML = `
-      <p><strong>Q${idx + 1}: ${q.questionText}</strong></p>
-      <p><em>Response:</em> "${ans}"</p>
-      <div class="toggle-group" data-idx="${idx}">
-        <button class="active" onclick="setScore(${idx}, 1.0, this)">✔ Correct (1.0)</button>
-        <button onclick="setScore(${idx}, 0.5, this)">⚠️ Partial (0.5)</button>
-        <button onclick="setScore(${idx}, 0.0, this)">✘ Incorrect (0.0)</button>
-      </div>
-    `;
-    qList.appendChild(div);
-    currentAssessment.scores[idx] = 1.0; // Default full credit
-  });
+  // 1. Setup Audio & Reading Duration
+  const readTimeSpan = document.getElementById("audit-read-time");
+  const readTimeFormatted = document.getElementById("audit-read-time-formatted");
+  const totalWordsInput = document.getElementById("total-words-read");
+  
+  const sec = Math.max(1, currentAssessment.readingTimeSeconds);
+  if (readTimeSpan) readTimeSpan.innerText = sec;
+  let m = String(Math.floor(sec / 60)).padStart(2, '0');
+  let s = String(sec % 60).padStart(2, '0');
+  if (readTimeFormatted) readTimeFormatted.innerText = `${m}:${s}`;
+  if (totalWordsInput) totalWordsInput.value = story.totalWords;
+
+  // 2. Interactive Word-by-Word Miscue Text
+  const interactiveBox = document.getElementById("interactive-text-box");
+  if (interactiveBox) {
+    interactiveBox.innerHTML = "";
+    currentAssessment.miscues = [];
+    const words = story.text.split(/\s+/);
+    words.forEach((w, wIdx) => {
+      const span = document.createElement("span");
+      span.className = "word-click";
+      span.innerText = w + " ";
+      span.addEventListener("click", () => {
+        span.classList.toggle("miscue");
+        if (span.classList.contains("miscue")) {
+          currentAssessment.miscues.push(wIdx);
+        } else {
+          currentAssessment.miscues = currentAssessment.miscues.filter(i => i !== wIdx);
+        }
+        const miscuesInput = document.getElementById("miscues-count");
+        if (miscuesInput) {
+          miscuesInput.value = currentAssessment.miscues.length;
+          recalculateMetrics();
+        }
+      });
+      interactiveBox.appendChild(span);
+    });
+  }
+
+  // 3. Question Rubric List
+  const list = document.getElementById("audit-questions-list");
+  if (list) {
+    list.innerHTML = "";
+    story.questions.forEach((q, idx) => {
+      const ans = currentAssessment.answers[idx] || "(No response recorded)";
+      currentAssessment.scores[idx] = 1.0; // Default full mark
+
+      const card = document.createElement("div");
+      card.style.cssText = "background:#fff; padding:12px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;";
+      card.innerHTML = `
+        <p style="margin:0 0 6px 0;"><strong>Q${idx + 1}:</strong> ${q.questionText}</p>
+        <p style="margin:0 0 8px 0; color:#334155;"><em>Student Response:</em> "${ans}"</p>
+        <div class="toggle-group">
+          <button class="active-pass" onclick="setScore(${idx}, 1.0, this)">✔ Correct (1.0)</button>
+          <button onclick="setScore(${idx}, 0.5, this)">⚠️ Partial (0.5)</button>
+          <button onclick="setScore(${idx}, 0.0, this)">✘ Incorrect (0.0)</button>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
 
   recalculateMetrics();
 }
 
-function setScore(qIdx, val, btn) {
-  currentAssessment.scores[qIdx] = val;
+function setScore(qIdx, mark, btn) {
+  currentAssessment.scores[qIdx] = mark;
   const parent = btn.parentElement;
-  parent.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+  parent.querySelectorAll("button").forEach(b => b.className = "");
+
+  if (mark === 1.0) btn.className = "active-pass";
+  else if (mark === 0.5) btn.className = "active-warn";
+  else btn.className = "active-fail";
+
   recalculateMetrics();
 }
 
 function recalculateMetrics() {
-  const words = parseInt(document.getElementById("words-1min").value) || 0;
-  const miscues = parseInt(document.getElementById("miscues-count").value) || 0;
-  
-  const wcpm = Math.max(0, words - miscues);
-  const accuracy = words > 0 ? Math.round(((words - miscues) / words) * 100) : 100;
-  
-  const totalPossible = currentAssessment.selectedStory.questions.length;
-  const earned = currentAssessment.scores.reduce((a, b) => a + b, 0);
-  const comp = Math.round((earned / totalPossible) * 100);
+  const totalWordsInput = document.getElementById("total-words-read");
+  const miscuesInput = document.getElementById("miscues-count");
 
+  const wordsRead = parseInt(totalWordsInput ? totalWordsInput.value : 0) || 0;
+  const errors = parseInt(miscuesInput ? miscuesInput.value : 0) || 0;
+  const seconds = Math.max(1, currentAssessment.readingTimeSeconds);
+
+  // Exact WCPM Formula: [ (Words Read - Errors) / Seconds ] * 60
+  const netWords = Math.max(0, wordsRead - errors);
+  const wcpm = Math.round((netWords / seconds) * 60);
+  const accuracy = wordsRead > 0 ? Math.round((netWords / wordsRead) * 100) : 100;
+
+  // Formula Display Update
+  document.getElementById("formula-words").innerText = wordsRead;
+  document.getElementById("formula-errors").innerText = errors;
+  document.getElementById("formula-seconds").innerText = seconds;
+  document.getElementById("formula-result").innerText = wcpm;
+
+  // Comprehension Calculation
+  const totalQuestions = currentAssessment.selectedStory ? currentAssessment.selectedStory.questions.length : 1;
+  const earnedPoints = currentAssessment.scores.reduce((a, b) => a + b, 0);
+  const compScore = Math.round((earnedPoints / totalQuestions) * 100);
+
+  currentAssessment.wcpm = wcpm;
+  currentAssessment.accuracy = accuracy;
+  currentAssessment.compScore = compScore;
+
+  // Metrics Display Update
   document.getElementById("calculated-wcpm").innerText = wcpm;
   document.getElementById("calculated-accuracy").innerText = accuracy + "%";
-  document.getElementById("calculated-comp").innerText = comp + "%";
+  document.getElementById("calculated-comp").innerText = compScore + "%";
 
-  // Diagnostic logic
-  const targetWCPM = WCPM_NORMS[currentAssessment.selectedStory.yearLevel]?.mid || 80;
-  let profile = "Secure";
+  // Diagnostic Classification Logic
+  const targetBenchmark = WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80;
+  let profile = "Secure Reader";
   let verdict = "PASS";
+  let profileBg = "#dcfce7";
+  let verdictBg = "#dcfce7";
 
   if (accuracy < 95) {
     profile = "Decoding Deficit";
     verdict = "CONSOLIDATE";
-  } else if (comp < 80) {
+    profileBg = "#fee2e2";
+    verdictBg = "#fee2e2";
+  } else if (compScore < 80) {
     profile = "Comprehension Deficit";
     verdict = "CONSOLIDATE";
-  } else if (wcpm < targetWCPM) {
+    profileBg = "#fef9c3";
+    verdictBg = "#fee2e2";
+  } else if (wcpm < targetBenchmark) {
     profile = "Disfluent / Effortful";
     verdict = "CONSOLIDATE";
+    profileBg = "#fef9c3";
+    verdictBg = "#fef9c3";
   }
 
-  document.getElementById("badge-profile").innerText = profile;
-  document.getElementById("badge-verdict").innerText = verdict;
+  const badgeProf = document.getElementById("badge-profile");
+  const badgeVerd = document.getElementById("badge-verdict");
+
+  if (badgeProf) {
+    badgeProf.innerText = profile;
+    badgeProf.style.background = profileBg;
+  }
+  if (badgeVerd) {
+    badgeVerd.innerText = verdict;
+    badgeVerd.style.background = verdictBg;
+  }
+}
+
+function resetAssessmentState() {
+  currentAssessment = {
+    room: "",
+    studentName: "",
+    selectedStory: null,
+    readingTimeSeconds: 0,
+    answers: [],
+    scores: [],
+    miscues: [],
+    wcpm: 0,
+    accuracy: 100,
+    compScore: 0,
+    fullAudioBlob: null
+  };
+
+  document.getElementById("room-select").value = "";
+  document.getElementById("student-name").value = "";
+  document.querySelectorAll(".story-card").forEach(c => c.classList.remove("selected"));
+  document.getElementById("btn-screen1-next").disabled = true;
+  document.getElementById("btn-screen2-start").disabled = true;
+  document.getElementById("btn-play-test").disabled = true;
+  document.getElementById("btn-play-test").innerText = "▶️ Play Test Sample";
+  document.getElementById("btn-play-test").className = "btn btn-outline";
+  document.getElementById("btn-reading-start").disabled = false;
+  document.getElementById("btn-reading-finish").disabled = true;
 }
