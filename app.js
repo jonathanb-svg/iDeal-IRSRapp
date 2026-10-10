@@ -2,6 +2,9 @@
  * iDeaL® Assessment App - Engine Logic
  */
 
+// Paste your deployed Google Apps Script Web App URL here to connect direct Drive uploads
+const GOOGLE_APPS_SCRIPT_URL = "";
+
 let currentAssessment = {
   room: "",
   studentName: "",
@@ -13,7 +16,8 @@ let currentAssessment = {
   wcpm: 0,
   accuracy: 100,
   compScore: 0,
-  fullAudioBlob: null
+  fullAudioBlob: null,
+  readingTranscript: ""
 };
 
 let micStream = null;
@@ -287,6 +291,7 @@ function setupScreen4() {
   if (readBtn) {
     readBtn.addEventListener("click", () => {
       if (!currentAssessment.selectedStory) return;
+      window.speechSynthesis.cancel();
       const qText = currentAssessment.selectedStory.questions[currentQuestionIdx].questionText;
       const utterance = new SpeechSynthesisUtterance(qText);
       window.speechSynthesis.speak(utterance);
@@ -299,6 +304,7 @@ function setupScreen4() {
         alert("Speech recognition is not supported in this browser. You can type directly into the box.");
         return;
       }
+      window.speechSynthesis.cancel();
       speakBtn.innerText = "🎙️ Listening... Speak Now";
       speakBtn.classList.add("btn-listening");
       speechRecognizer.start();
@@ -311,6 +317,7 @@ function setupScreen4() {
 
   if (nextBtn) {
     nextBtn.addEventListener("click", () => {
+      window.speechSynthesis.cancel();
       saveCurrentAnswer();
       currentQuestionIdx++;
       if (currentQuestionIdx < currentAssessment.selectedStory.questions.length) {
@@ -324,6 +331,7 @@ function setupScreen4() {
 
   if (prevBtn) {
     prevBtn.addEventListener("click", () => {
+      window.speechSynthesis.cancel();
       saveCurrentAnswer();
       if (currentQuestionIdx > 0) {
         currentQuestionIdx--;
@@ -369,10 +377,15 @@ function resetSilenceTimer(text) {
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   if (wordCount >= 1 && wordCount <= 3) {
     silenceTimer = setTimeout(() => {
+      // 1. Temporarily stop speech recognizer so it doesn't record the prompt voice
+      if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
+
+      // 2. Display visual box and speak prompt
       if (box) box.classList.remove("hidden");
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance("Can you tell me a little bit more about that?");
       window.speechSynthesis.speak(utterance);
-    }, 3000); // 3 full seconds of absolute silence before nudging
+    }, 2000); // Calibrated to 2 seconds of silence
   }
 }
 
@@ -387,16 +400,44 @@ function setupScreen5() {
   if (miscuesInput) miscuesInput.addEventListener("input", recalculateMetrics);
 
   if (saveBtn) {
-    saveBtn.addEventListener("click", () => {
+    saveBtn.addEventListener("click", async () => {
       saveBtn.disabled = true;
       saveBtn.innerText = "⏳ Syncing to Google Drive...";
-      
-      // Simulate direct Apps Script endpoint sync
-      setTimeout(() => {
-        alert(`Success! Assessment record for ${currentAssessment.studentName} has been saved directly to the ${currentAssessment.room} Google Drive folder.`);
+
+      if (!GOOGLE_APPS_SCRIPT_URL) {
+        alert(`Google Apps Script URL not configured yet. Payload for ${currentAssessment.studentName} is ready to save to ${currentAssessment.room}.`);
         saveBtn.disabled = false;
         saveBtn.innerText = "☁️ Save Record & Sync to Google Drive";
-      }, 1500);
+        return;
+      }
+
+      try {
+        const payload = {
+          studentName: currentAssessment.studentName,
+          room: currentAssessment.room,
+          storyTitle: currentAssessment.selectedStory.title,
+          wcpm: currentAssessment.wcpm,
+          accuracy: currentAssessment.accuracy,
+          compScore: currentAssessment.compScore,
+          profile: document.getElementById("badge-profile").innerText,
+          verdict: document.getElementById("badge-verdict").innerText,
+          answers: currentAssessment.answers
+        };
+
+        await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        alert(`Success! Assessment record for ${currentAssessment.studentName} has been synced directly to ${currentAssessment.room} Google Drive folder.`);
+      } catch (err) {
+        alert("Upload failed. Please check internet connection or Apps Script URL.");
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "☁️ Save Record & Sync to Google Drive";
+      }
     });
   }
 
@@ -430,10 +471,12 @@ function populateAuditScreen() {
     interactiveBox.innerHTML = "";
     currentAssessment.miscues = [];
     const words = story.text.split(/\s+/);
+
     words.forEach((w, wIdx) => {
       const span = document.createElement("span");
       span.className = "word-click";
       span.innerText = w + " ";
+
       span.addEventListener("click", () => {
         span.classList.toggle("miscue");
         if (span.classList.contains("miscue")) {
@@ -451,23 +494,38 @@ function populateAuditScreen() {
     });
   }
 
-  // 3. Question Rubric List
+  // 3. Question Rubric List & Keyword Auto-Scoring
   const list = document.getElementById("audit-questions-list");
   if (list) {
     list.innerHTML = "";
     story.questions.forEach((q, idx) => {
-      const ans = currentAssessment.answers[idx] || "(No response recorded)";
-      currentAssessment.scores[idx] = 1.0; // Default full mark
+      const ans = currentAssessment.answers[idx] || "";
+      const cleanedAns = ans.toLowerCase().trim();
+
+      // Keyword & Acceptable Answers Evaluator
+      let autoMark = 0.0;
+      const targets = [...(q.keywords || []), ...(q.acceptableAnswers || [])].map(k => k.toLowerCase());
+
+      if (cleanedAns.length > 0 && targets.length > 0) {
+        const hasMatch = targets.some(target => cleanedAns.includes(target));
+        if (hasMatch) {
+          autoMark = 1.0;
+        } else {
+          autoMark = 0.0; // Random inputs like "popsicle" auto-flag as incorrect
+        }
+      }
+
+      currentAssessment.scores[idx] = autoMark;
 
       const card = document.createElement("div");
       card.style.cssText = "background:#fff; padding:12px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;";
       card.innerHTML = `
         <p style="margin:0 0 6px 0;"><strong>Q${idx + 1}:</strong> ${q.questionText}</p>
-        <p style="margin:0 0 8px 0; color:#334155;"><em>Student Response:</em> "${ans}"</p>
+        <p style="margin:0 0 8px 0; color:#334155;"><em>Student Response:</em> "${ans || '(No response recorded)'}"</p>
         <div class="toggle-group">
-          <button class="active-pass" onclick="setScore(${idx}, 1.0, this)">✔ Correct (1.0)</button>
-          <button onclick="setScore(${idx}, 0.5, this)">⚠️ Partial (0.5)</button>
-          <button onclick="setScore(${idx}, 0.0, this)">✘ Incorrect (0.0)</button>
+          <button class="${autoMark === 1.0 ? 'active-pass' : ''}" onclick="setScore(${idx}, 1.0, this)">✔ Correct (1.0)</button>
+          <button class="${autoMark === 0.5 ? 'active-warn' : ''}" onclick="setScore(${idx}, 0.5, this)">⚠️ Partial (0.5)</button>
+          <button class="${autoMark === 0.0 ? 'active-fail' : ''}" onclick="setScore(${idx}, 0.0, this)">✘ Incorrect (0.0)</button>
         </div>
       `;
       list.appendChild(card);
@@ -571,7 +629,8 @@ function resetAssessmentState() {
     wcpm: 0,
     accuracy: 100,
     compScore: 0,
-    fullAudioBlob: null
+    fullAudioBlob: null,
+    readingTranscript: ""
   };
 
   document.getElementById("room-select").value = "";
