@@ -2,7 +2,7 @@
  * iDeaL® Assessment App - Engine Logic
  */
 
-const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyE3dB6CiRPxOUYn7GD1YyrDC_0hz3UdZIVrKgRE7oeDMnFT8ZJhNONWDkVFDttyOdw2w/exec";
+const GOOGLE_APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
 
 let currentAssessment = {
   room: "",
@@ -422,6 +422,19 @@ function resetSilenceTimer(text) {
   }
 }
 
+// Helper: Convert Blob to Base64 String
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64data = reader.result.split(',')[1];
+      resolve(base64data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 // SCREEN 5 LOGIC
 function setupScreen5() {
   const totalWordsInput = document.getElementById("total-words-read");
@@ -435,9 +448,9 @@ function setupScreen5() {
   if (saveBtn) {
     saveBtn.addEventListener("click", async () => {
       saveBtn.disabled = true;
-      saveBtn.innerText = "⏳ Syncing to Google Drive...";
+      saveBtn.innerText = "⏳ Syncing Audio & Record to Google Drive...";
 
-      if (!GOOGLE_APPS_SCRIPT_URL) {
+      if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
         alert(`Google Apps Script URL not configured yet. Payload for ${currentAssessment.studentName} is ready to save to ${currentAssessment.room}.`);
         saveBtn.disabled = false;
         saveBtn.innerText = "☁️ Save Record & Sync to Google Drive";
@@ -445,6 +458,15 @@ function setupScreen5() {
       }
 
       try {
+        let audioBase64 = "";
+        if (currentAssessment.fullAudioBlob) {
+          audioBase64 = await blobToBase64(currentAssessment.fullAudioBlob);
+        }
+
+        // Get exact marked miscue words from Screen 5 interactive box
+        const storyWords = currentAssessment.selectedStory ? currentAssessment.selectedStory.text.split(/\s+/) : [];
+        const markedMiscueWords = currentAssessment.miscues.map(idx => storyWords[idx]).filter(Boolean);
+
         const questionsDetails = currentAssessment.selectedStory.questions.map((q, idx) => {
           return {
             type: q.type,
@@ -464,12 +486,14 @@ function setupScreen5() {
           readingTime: currentAssessment.readingTimeSeconds,
           wordsRead: parseInt(totalWordsInput ? totalWordsInput.value : 0) || 0,
           errors: parseInt(miscuesInput ? miscuesInput.value : 0) || 0,
+          markedMiscues: markedMiscueWords,
           wcpm: currentAssessment.wcpm,
           accuracy: currentAssessment.accuracy,
           compScore: currentAssessment.compScore,
           benchmark: WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80,
           profile: document.getElementById("badge-profile").innerText,
           verdict: document.getElementById("badge-verdict").innerText,
+          audioBase64: audioBase64,
           questionsDetails: questionsDetails
         };
 
@@ -480,7 +504,7 @@ function setupScreen5() {
           body: JSON.stringify(payload)
         });
 
-        alert(`Success! Assessment record for ${currentAssessment.studentName} has been synced directly to ${currentAssessment.room} Google Drive folder.`);
+        alert(`Success! Assessment report and audio recording for ${currentAssessment.studentName} have been saved to ${currentAssessment.room}.`);
       } catch (err) {
         alert("Upload failed. Please check internet connection or Apps Script URL.");
       } finally {
@@ -586,19 +610,18 @@ function populateAuditScreen() {
             autoMark = 0.0;
           }
         } 
-        // 2. ALL OTHER QUESTIONS (Strict required noun validation)
+        // 2. ALL OTHER QUESTIONS
         else {
           const isFullMatch = acceptable.some(target => {
-            if (cleanedAns.includes(target)) return true; // Direct phrase match
+            if (cleanedAns.includes(target)) return true;
             
             const coreWords = target.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
             if (coreWords.length === 0) return false;
 
-            // Extract the critical topic noun (e.g. "flowers" from "close to lots of flowers")
             const requiredKeyNoun = coreWords[coreWords.length - 1];
             const hasRequiredNoun = cleanedAns.includes(requiredKeyNoun);
 
-            if (!hasRequiredNoun) return false; // Fail immediately if main noun is missing (e.g. "candy" instead of "flowers")
+            if (!hasRequiredNoun) return false;
 
             const matchCount = coreWords.filter(w => cleanedAns.includes(w)).length;
             return matchCount >= Math.min(2, coreWords.length);
