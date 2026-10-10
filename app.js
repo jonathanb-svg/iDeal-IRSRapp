@@ -445,16 +445,32 @@ function setupScreen5() {
       }
 
       try {
+        const questionsDetails = currentAssessment.selectedStory.questions.map((q, idx) => {
+          return {
+            type: q.type,
+            questionText: q.questionText,
+            response: currentAssessment.answers[idx] || "",
+            score: currentAssessment.scores[idx] !== undefined ? currentAssessment.scores[idx] : 0.0
+          };
+        });
+
+        const totalWordsInput = document.getElementById("total-words-read");
+        const miscuesInput = document.getElementById("miscues-count");
+
         const payload = {
           studentName: currentAssessment.studentName,
           room: currentAssessment.room,
           storyTitle: currentAssessment.selectedStory.title,
+          readingTime: currentAssessment.readingTimeSeconds,
+          wordsRead: parseInt(totalWordsInput ? totalWordsInput.value : 0) || 0,
+          errors: parseInt(miscuesInput ? miscuesInput.value : 0) || 0,
           wcpm: currentAssessment.wcpm,
           accuracy: currentAssessment.accuracy,
           compScore: currentAssessment.compScore,
+          benchmark: WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80,
           profile: document.getElementById("badge-profile").innerText,
           verdict: document.getElementById("badge-verdict").innerText,
-          answers: currentAssessment.answers
+          questionsDetails: questionsDetails
         };
 
         await fetch(GOOGLE_APPS_SCRIPT_URL, {
