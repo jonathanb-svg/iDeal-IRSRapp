@@ -29,7 +29,7 @@ let readingRecognizer = null;
 let audioContext = null;
 let analyser = null;
 let silenceTimer = null;
-let autoStopMicTimer = null;
+let speechSilenceTimer = null;
 
 // Hasbrouck & Tindal Mid-Year 50th Percentile Benchmarks
 const WCPM_BENCHMARKS = {
@@ -302,11 +302,12 @@ function setupScreen4() {
         txtArea.value += (txtArea.value ? " " : "") + transcript;
         resetSilenceTimer(txtArea.value);
       }
-      // Reset auto-stop timer whenever new speech is detected
-      if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
-      autoStopMicTimer = setTimeout(() => {
+      
+      // Silence detection: reset timer whenever new speech arrives
+      if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+      speechSilenceTimer = setTimeout(() => {
         if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
-      }, 4000); // Automatically turn off mic 4s after student stops speaking
+      }, 3500); // Turns off 3.5s after speech pauses
     };
 
     speechRecognizer.onend = () => {
@@ -314,7 +315,7 @@ function setupScreen4() {
         speakBtn.innerText = "🎤 Speak Answer";
         speakBtn.classList.remove("btn-listening");
       }
-      if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
+      if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
     };
   }
 
@@ -339,11 +340,10 @@ function setupScreen4() {
       speakBtn.classList.add("btn-listening");
       speechRecognizer.start();
 
-      // Initial 6s safety limit if no speech is detected at all
-      if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
-      autoStopMicTimer = setTimeout(() => {
+      if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+      speechSilenceTimer = setTimeout(() => {
         if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
-      }, 6000);
+      }, 6000); // Initial 6s timeout only if no initial speech detected
     });
   }
 
@@ -380,7 +380,7 @@ function setupScreen4() {
 function saveCurrentAnswer() {
   if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
   if (silenceTimer) clearTimeout(silenceTimer);
-  if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
+  if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
   const box = document.getElementById("elaboration-box");
   if (box) box.classList.add("hidden");
 
@@ -646,7 +646,7 @@ function recalculateMetrics() {
   document.getElementById("calculated-accuracy").innerText = accuracy + "%";
   document.getElementById("calculated-comp").innerText = compScore + "%";
 
-  const targetBenchmark = WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80;
+  const targetBenchmark = currentAssessment.selectedStory ? (WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80) : 80;
   let profile = "Secure Reader";
   let verdict = "PASS";
   let profileBg = "#dcfce7";
@@ -674,11 +674,11 @@ function recalculateMetrics() {
 
   if (badgeProf) {
     badgeProf.innerText = profile;
-    badgeProf.style.background = profileBg;
+    badgeProf.style.backgroundColor = profileBg;
   }
   if (badgeVerd) {
     badgeVerd.innerText = verdict;
-    badgeVerd.style.background = verdictBg;
+    badgeVerd.style.backgroundColor = verdictBg;
   }
 }
 
