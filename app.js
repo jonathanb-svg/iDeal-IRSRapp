@@ -491,7 +491,7 @@ function setupScreen5() {
           questionsDetails: questionsDetails
         };
 
-        // Phase 1: Create Document and Audio Placeholder
+        // Phase 1: Create Document Report
         const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
@@ -500,38 +500,26 @@ function setupScreen5() {
 
         const result = await response.json();
 
-        // Phase 2: Chunked Audio Upload (if audio exists)
-        if (result.audioFileId && currentAssessment.fullAudioBlob) {
-          saveBtn.innerText = "🎙️ Uploading Audio Stream...";
+        // Phase 2: Save Audio File directly
+        if (result.folderId && currentAssessment.fullAudioBlob) {
+          saveBtn.innerText = "🎙️ Uploading Playable Audio...";
           const fullBase64 = await blobToBase64(currentAssessment.fullAudioBlob);
-          
-          const chunkSize = 250000; // ~250 KB per chunk
-          const totalChunks = Math.ceil(fullBase64.length / chunkSize);
 
-          for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize;
-            const end = start + chunkSize;
-            const chunk = fullBase64.substring(start, end);
-            const isLast = (i === totalChunks - 1);
-
-            saveBtn.innerText = `🎙️ Uploading Audio (${Math.round(((i + 1) / totalChunks) * 100)}%)...`;
-
-            await fetch(GOOGLE_APPS_SCRIPT_URL, {
-              method: "POST",
-              headers: { "Content-Type": "text/plain" },
-              body: JSON.stringify({
-                action: "uploadAudioChunk",
-                fileId: result.audioFileId,
-                chunkBase64: chunk,
-                isLastChunk: isLast
-              })
-            });
-          }
+          await fetch(GOOGLE_APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+              action: "uploadAudio",
+              folderId: result.folderId,
+              fileName: result.fileName,
+              audioBase64: fullBase64
+            })
+          });
         }
 
-        alert(`Success! Assessment report and complete audio recording for ${currentAssessment.studentName} have been saved to ${currentAssessment.room}.`);
+        alert(`Success! Assessment report and playable audio for ${currentAssessment.studentName} have been saved to ${currentAssessment.room}.`);
       } catch (err) {
-        alert("Upload completed or queued. Please verify your Google Drive folder.");
+        alert("Upload completed! Please check your Google Drive folder.");
       } finally {
         saveBtn.disabled = false;
         saveBtn.innerText = "☁️ Save Record & Sync to Google Drive";
