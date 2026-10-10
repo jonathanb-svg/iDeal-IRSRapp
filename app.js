@@ -26,6 +26,7 @@ let mainAudioChunks = [];
 let readingTimerInterval = null;
 let currentQuestionIdx = 0;
 let speechRecognizer = null;
+let readingRecognizer = null;
 let audioContext = null;
 let analyser = null;
 let silenceTimer = null;
@@ -33,11 +34,11 @@ let silenceTimer = null;
 // Hasbrouck & Tindal Mid-Year 50th Percentile Benchmarks
 const WCPM_BENCHMARKS = {
   1: 23,
-  2: 72,
-  3: 92,
-  4: 112,
-  5: 127,
-  6: 140
+  2: 29,
+  3: 84,
+  4: 97,
+  5: 120,
+  6: 133
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -186,7 +187,7 @@ function setupScreen2() {
       const audio = new Audio(URL.createObjectURL(testBlob));
       audio.play();
       audio.onended = () => {
-        testBlob = null; // Auto-discard scratch buffer from memory
+        testBlob = null; // Auto-discard scratch buffer
         playBtn.innerText = "✅ Audio Verified";
         playBtn.className = "btn btn-success";
         if (startBtn) startBtn.disabled = false;
@@ -217,12 +218,33 @@ function setupScreen3() {
   const status = document.getElementById("reading-status");
   const timer = document.getElementById("reading-timer");
 
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
   if (startBtn) {
     startBtn.addEventListener("click", () => {
       startBtn.disabled = true;
       if (finishBtn) finishBtn.disabled = false;
       if (status) status.innerText = "🔴 Live Recording...";
 
+      // Reset reading transcript buffer
+      currentAssessment.readingTranscript = "";
+
+      // Background Speech Recognition for automatic miscue baseline
+      if (SpeechRecognition) {
+        readingRecognizer = new SpeechRecognition();
+        readingRecognizer.continuous = true;
+        readingRecognizer.interimResults = true;
+        readingRecognizer.onresult = (e) => {
+          let currentTrans = "";
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            currentTrans += e.results[i][0].transcript + " ";
+          }
+          currentAssessment.readingTranscript += " " + currentTrans;
+        };
+        try { readingRecognizer.start(); } catch(err){}
+      }
+
+      // High-Fidelity Audio Recorder
       mainAudioChunks = [];
       mediaRecorder = new MediaRecorder(micStream);
       mediaRecorder.ondataavailable = e => mainAudioChunks.push(e.data);
@@ -241,6 +263,11 @@ function setupScreen3() {
   if (finishBtn) {
     finishBtn.addEventListener("click", () => {
       clearInterval(readingTimerInterval);
+
+      if (readingRecognizer) {
+        try { readingRecognizer.stop(); } catch(err){}
+      }
+
       if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.onstop = () => {
           currentAssessment.fullAudioBlob = new Blob(mainAudioChunks, { type: "audio/webm" });
@@ -377,15 +404,12 @@ function resetSilenceTimer(text) {
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   if (wordCount >= 1 && wordCount <= 3) {
     silenceTimer = setTimeout(() => {
-      // 1. Temporarily stop speech recognizer so it doesn't record the prompt voice
       if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
-
-      // 2. Display visual box and speak prompt
       if (box) box.classList.remove("hidden");
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance("Can you tell me a little bit more about that?");
       window.speechSynthesis.speak(utterance);
-    }, 2000); // Calibrated to 2 seconds of silence
+    }, 2000);
   }
 }
 
@@ -465,22 +489,30 @@ function populateAuditScreen() {
   if (readTimeFormatted) readTimeFormatted.innerText = `${m}:${s}`;
   if (totalWordsInput) totalWordsInput.value = story.totalWords;
 
-  // 2. Interactive Word-by-Word Miscue Text
+  // 2. Interactive Word-by-Word Miscue Text with Background Speech Auto-Alignment
   const interactiveBox = document.getElementById("interactive-text-box");
   if (interactiveBox) {
     interactiveBox.innerHTML = "";
     currentAssessment.miscues = [];
-    const words = story.text.split(/\s+/);
+    const storyWords = story.text.split(/\s+/);
+    const spokenTranscript = (currentAssessment.readingTranscript || "").toLowerCase().replace(/[^a-z0-9\s]/g, "");
 
-    words.forEach((w, wIdx) => {
+    storyWords.forEach((w, wIdx) => {
+      const cleanWord = w.toLowerCase().replace(/[^a-z0-9]/g, "");
       const span = document.createElement("span");
       span.className = "word-click";
       span.innerText = w + " ";
 
+      // Auto-pre-flag miscue if word is completely missing from spoken transcript
+      if (cleanWord.length > 2 && spokenTranscript.length > 0 && !spokenTranscript.includes(cleanWord)) {
+        span.classList.add("miscue");
+        currentAssessment.miscues.push(wIdx);
+      }
+
       span.addEventListener("click", () => {
         span.classList.toggle("miscue");
         if (span.classList.contains("miscue")) {
-          currentAssessment.miscues.push(wIdx);
+          if (!currentAssessment.miscues.includes(wIdx)) currentAssessment.miscues.push(wIdx);
         } else {
           currentAssessment.miscues = currentAssessment.miscues.filter(i => i !== wIdx);
         }
@@ -492,9 +524,12 @@ function populateAuditScreen() {
       });
       interactiveBox.appendChild(span);
     });
+
+    const miscuesInput = document.getElementById("miscues-count");
+    if (miscuesInput) miscuesInput.value = currentAssessment.miscues.length;
   }
 
-  // 3. Question Rubric List & Keyword Auto-Scoring
+  // 3. Question Rubric List & Exact Nested Dataset Auto-Scoring
   const list = document.getElementById("audit-questions-list");
   if (list) {
     list.innerHTML = "";
@@ -502,16 +537,48 @@ function populateAuditScreen() {
       const ans = currentAssessment.answers[idx] || "";
       const cleanedAns = ans.toLowerCase().trim();
 
-      // Keyword & Acceptable Answers Evaluator
       let autoMark = 0.0;
-      const targets = [...(q.keywords || []), ...(q.acceptableAnswers || [])].map(k => k.toLowerCase());
+      const sg = q.scoringGuide || {};
 
-      if (cleanedAns.length > 0 && targets.length > 0) {
-        const hasMatch = targets.some(target => cleanedAns.includes(target));
-        if (hasMatch) {
-          autoMark = 1.0;
-        } else {
-          autoMark = 0.0; // Random inputs like "popsicle" auto-flag as incorrect
+      // Extract target arrays from dataset structure
+      const acceptable = (sg.acceptableAnswers || []).map(a => a.toLowerCase());
+      const partials = (sg.partialAnswers || []).map(p => p.toLowerCase());
+      const keyIdeas = (sg.keyIdeas || []).map(k => k.toLowerCase());
+
+      if (cleanedAns.length > 0) {
+        // Retell / Key Ideas check
+        if (q.type === "retell" && keyIdeas.length > 0) {
+          let matchedIdeas = 0;
+          keyIdeas.forEach(idea => {
+            const ideaKeywords = idea.split(" ").filter(w => w.length > 3);
+            const matches = ideaKeywords.filter(kw => cleanedAns.includes(kw));
+            if (matches.length >= 2) matchedIdeas++;
+          });
+          if (matchedIdeas >= (sg.requiredKeyIdeasCount || 3)) {
+            autoMark = 1.0;
+          } else if (matchedIdeas >= 1) {
+            autoMark = 0.5;
+          }
+        } 
+        // Acceptable / Partial direct matching
+        else {
+          const isFullMatch = acceptable.some(target => {
+            const coreWords = target.split(" ").filter(w => w.length > 2);
+            return coreWords.some(w => cleanedAns.includes(w));
+          });
+
+          const isPartialMatch = partials.some(target => {
+            const coreWords = target.split(" ").filter(w => w.length > 2);
+            return coreWords.some(w => cleanedAns.includes(w));
+          });
+
+          if (isFullMatch) {
+            autoMark = 1.0;
+          } else if (isPartialMatch) {
+            autoMark = 0.5;
+          } else {
+            autoMark = 0.0; // Random inputs like "popsicle" auto-grade as incorrect
+          }
         }
       }
 
@@ -520,7 +587,7 @@ function populateAuditScreen() {
       const card = document.createElement("div");
       card.style.cssText = "background:#fff; padding:12px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;";
       card.innerHTML = `
-        <p style="margin:0 0 6px 0;"><strong>Q${idx + 1}:</strong> ${q.questionText}</p>
+        <p style="margin:0 0 6px 0;"><strong>Q${idx + 1} (${q.type}):</strong> ${q.questionText}</p>
         <p style="margin:0 0 8px 0; color:#334155;"><em>Student Response:</em> "${ans || '(No response recorded)'}"</p>
         <div class="toggle-group">
           <button class="${autoMark === 1.0 ? 'active-pass' : ''}" onclick="setScore(${idx}, 1.0, this)">✔ Correct (1.0)</button>
@@ -580,7 +647,7 @@ function recalculateMetrics() {
   document.getElementById("calculated-accuracy").innerText = accuracy + "%";
   document.getElementById("calculated-comp").innerText = compScore + "%";
 
-  // Diagnostic Classification Logic
+  // Hasbrouck & Tindal Diagnostic Logic
   const targetBenchmark = WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80;
   let profile = "Secure Reader";
   let verdict = "PASS";
