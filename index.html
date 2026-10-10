@@ -259,6 +259,26 @@
       font-size: 15px;
       margin: 12px 0;
     }
+
+    /* Clean Collapsible Rubric Box */
+    .rubric-key-box {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #334155;
+    }
+    .rubric-toggle-link {
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      text-decoration: underline;
+      display: inline-block;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -402,9 +422,12 @@
           WCPM = [ (<span id="formula-words">0</span> - <span id="formula-errors">0</span>) / <span id="formula-seconds">1</span> ] × 60 = <strong id="formula-result">0</strong>
         </div>
 
-        <div style="display: flex; gap: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid var(--border);">
-          <p style="margin:0;"><strong>Calculated WCPM:</strong> <span id="calculated-wcpm" style="font-size: 20px; font-weight:700; color:var(--primary);">0</span></p>
-          <p style="margin:0;"><strong>Accuracy Rate:</strong> <span id="calculated-accuracy" style="font-size: 20px; font-weight:700; color:var(--success);">100%</span></p>
+        <div style="display: flex; gap: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid var(--border); align-items: center; justify-content: space-between;">
+          <div>
+            <p style="margin:0;"><strong>Calculated WCPM:</strong> <span id="calculated-wcpm" style="font-size: 20px; font-weight:700; color:var(--primary);">0</span></p>
+            <p style="margin:0;"><strong>Accuracy Rate:</strong> <span id="calculated-accuracy" style="font-size: 20px; font-weight:700; color:var(--success);">100%</span></p>
+          </div>
+          <span id="target-benchmark-badge" class="metric-badge" style="background:#e2e8f0; color:#475569;">Target: -- WCPM</span>
         </div>
       </div>
 
