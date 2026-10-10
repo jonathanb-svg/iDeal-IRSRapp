@@ -422,19 +422,6 @@ function resetSilenceTimer(text) {
   }
 }
 
-// Helper: Convert Blob to Base64 String
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64data = reader.result.split(',')[1];
-      resolve(base64data);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
 // SCREEN 5 LOGIC
 function setupScreen5() {
   const totalWordsInput = document.getElementById("total-words-read");
@@ -448,7 +435,7 @@ function setupScreen5() {
   if (saveBtn) {
     saveBtn.addEventListener("click", async () => {
       saveBtn.disabled = true;
-      saveBtn.innerText = "⏳ Syncing Audio & Record to Google Drive...";
+      saveBtn.innerText = "⏳ Syncing Record to Google Drive...";
 
       if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
         alert(`Google Apps Script URL not configured yet. Payload for ${currentAssessment.studentName} is ready to save to ${currentAssessment.room}.`);
@@ -458,11 +445,6 @@ function setupScreen5() {
       }
 
       try {
-        let audioBase64 = "";
-        if (currentAssessment.fullAudioBlob) {
-          audioBase64 = await blobToBase64(currentAssessment.fullAudioBlob);
-        }
-
         // Get exact marked miscue words from Screen 5 interactive box
         const storyWords = currentAssessment.selectedStory ? currentAssessment.selectedStory.text.split(/\s+/) : [];
         const markedMiscueWords = currentAssessment.miscues.map(idx => storyWords[idx]).filter(Boolean);
@@ -493,7 +475,6 @@ function setupScreen5() {
           benchmark: WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80,
           profile: document.getElementById("badge-profile").innerText,
           verdict: document.getElementById("badge-verdict").innerText,
-          audioBase64: audioBase64,
           questionsDetails: questionsDetails
         };
 
@@ -504,7 +485,7 @@ function setupScreen5() {
           body: JSON.stringify(payload)
         });
 
-        alert(`Success! Assessment report and audio recording for ${currentAssessment.studentName} have been saved to ${currentAssessment.room}.`);
+        alert(`Success! Assessment report for ${currentAssessment.studentName} has been saved to ${currentAssessment.room}.`);
       } catch (err) {
         alert("Upload failed. Please check internet connection or Apps Script URL.");
       } finally {
