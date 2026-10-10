@@ -2,7 +2,6 @@
  * iDeaL® Assessment App - Engine Logic
  */
 
-// Paste your deployed Google Apps Script Web App URL here to connect direct Drive uploads
 const GOOGLE_APPS_SCRIPT_URL = "";
 
 let currentAssessment = {
@@ -30,6 +29,7 @@ let readingRecognizer = null;
 let audioContext = null;
 let analyser = null;
 let silenceTimer = null;
+let autoStopMicTimer = null;
 
 // Hasbrouck & Tindal Mid-Year 50th Percentile Benchmarks
 const WCPM_BENCHMARKS = {
@@ -187,7 +187,7 @@ function setupScreen2() {
       const audio = new Audio(URL.createObjectURL(testBlob));
       audio.play();
       audio.onended = () => {
-        testBlob = null; // Auto-discard scratch buffer
+        testBlob = null;
         playBtn.innerText = "✅ Audio Verified";
         playBtn.className = "btn btn-success";
         if (startBtn) startBtn.disabled = false;
@@ -226,10 +226,8 @@ function setupScreen3() {
       if (finishBtn) finishBtn.disabled = false;
       if (status) status.innerText = "🔴 Live Recording...";
 
-      // Reset reading transcript buffer
       currentAssessment.readingTranscript = "";
 
-      // Background Speech Recognition for automatic miscue baseline
       if (SpeechRecognition) {
         readingRecognizer = new SpeechRecognition();
         readingRecognizer.continuous = true;
@@ -244,7 +242,6 @@ function setupScreen3() {
         try { readingRecognizer.start(); } catch(err){}
       }
 
-      // High-Fidelity Audio Recorder
       mainAudioChunks = [];
       mediaRecorder = new MediaRecorder(micStream);
       mediaRecorder.ondataavailable = e => mainAudioChunks.push(e.data);
@@ -305,6 +302,11 @@ function setupScreen4() {
         txtArea.value += (txtArea.value ? " " : "") + transcript;
         resetSilenceTimer(txtArea.value);
       }
+      // Reset auto-stop timer whenever new speech is detected
+      if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
+      autoStopMicTimer = setTimeout(() => {
+        if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
+      }, 4000); // Automatically turn off mic 4s after student stops speaking
     };
 
     speechRecognizer.onend = () => {
@@ -312,6 +314,7 @@ function setupScreen4() {
         speakBtn.innerText = "🎤 Speak Answer";
         speakBtn.classList.remove("btn-listening");
       }
+      if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
     };
   }
 
@@ -335,6 +338,12 @@ function setupScreen4() {
       speakBtn.innerText = "🎙️ Listening... Speak Now";
       speakBtn.classList.add("btn-listening");
       speechRecognizer.start();
+
+      // Initial 6s safety limit if no speech is detected at all
+      if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
+      autoStopMicTimer = setTimeout(() => {
+        if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
+      }, 6000);
     });
   }
 
@@ -371,6 +380,7 @@ function setupScreen4() {
 function saveCurrentAnswer() {
   if (speechRecognizer) try { speechRecognizer.stop(); } catch(e){}
   if (silenceTimer) clearTimeout(silenceTimer);
+  if (autoStopMicTimer) clearTimeout(autoStopMicTimer);
   const box = document.getElementById("elaboration-box");
   if (box) box.classList.add("hidden");
 
@@ -477,7 +487,6 @@ function populateAuditScreen() {
   const story = currentAssessment.selectedStory;
   if (!story) return;
 
-  // 1. Setup Audio & Reading Duration
   const readTimeSpan = document.getElementById("audit-read-time");
   const readTimeFormatted = document.getElementById("audit-read-time-formatted");
   const totalWordsInput = document.getElementById("total-words-read");
@@ -489,7 +498,6 @@ function populateAuditScreen() {
   if (readTimeFormatted) readTimeFormatted.innerText = `${m}:${s}`;
   if (totalWordsInput) totalWordsInput.value = story.totalWords;
 
-  // 2. Interactive Word-by-Word Miscue Text with Background Speech Auto-Alignment
   const interactiveBox = document.getElementById("interactive-text-box");
   if (interactiveBox) {
     interactiveBox.innerHTML = "";
@@ -503,7 +511,6 @@ function populateAuditScreen() {
       span.className = "word-click";
       span.innerText = w + " ";
 
-      // Auto-pre-flag miscue if word is completely missing from spoken transcript
       if (cleanWord.length > 2 && spokenTranscript.length > 0 && !spokenTranscript.includes(cleanWord)) {
         span.classList.add("miscue");
         currentAssessment.miscues.push(wIdx);
@@ -529,7 +536,6 @@ function populateAuditScreen() {
     if (miscuesInput) miscuesInput.value = currentAssessment.miscues.length;
   }
 
-  // 3. Question Rubric List & Exact Nested Dataset Auto-Scoring
   const list = document.getElementById("audit-questions-list");
   if (list) {
     list.innerHTML = "";
@@ -540,13 +546,11 @@ function populateAuditScreen() {
       let autoMark = 0.0;
       const sg = q.scoringGuide || {};
 
-      // Extract target arrays from dataset structure
       const acceptable = (sg.acceptableAnswers || []).map(a => a.toLowerCase());
       const partials = (sg.partialAnswers || []).map(p => p.toLowerCase());
       const keyIdeas = (sg.keyIdeas || []).map(k => k.toLowerCase());
 
       if (cleanedAns.length > 0) {
-        // Retell / Key Ideas check
         if (q.type === "retell" && keyIdeas.length > 0) {
           let matchedIdeas = 0;
           keyIdeas.forEach(idea => {
@@ -560,7 +564,6 @@ function populateAuditScreen() {
             autoMark = 0.5;
           }
         } 
-        // Acceptable / Partial direct matching
         else {
           const isFullMatch = acceptable.some(target => {
             const coreWords = target.split(" ").filter(w => w.length > 2);
@@ -577,7 +580,7 @@ function populateAuditScreen() {
           } else if (isPartialMatch) {
             autoMark = 0.5;
           } else {
-            autoMark = 0.0; // Random inputs like "popsicle" auto-grade as incorrect
+            autoMark = 0.0;
           }
         }
       }
@@ -622,18 +625,15 @@ function recalculateMetrics() {
   const errors = parseInt(miscuesInput ? miscuesInput.value : 0) || 0;
   const seconds = Math.max(1, currentAssessment.readingTimeSeconds);
 
-  // Exact WCPM Formula: [ (Words Read - Errors) / Seconds ] * 60
   const netWords = Math.max(0, wordsRead - errors);
   const wcpm = Math.round((netWords / seconds) * 60);
   const accuracy = wordsRead > 0 ? Math.round((netWords / wordsRead) * 100) : 100;
 
-  // Formula Display Update
   document.getElementById("formula-words").innerText = wordsRead;
   document.getElementById("formula-errors").innerText = errors;
   document.getElementById("formula-seconds").innerText = seconds;
   document.getElementById("formula-result").innerText = wcpm;
 
-  // Comprehension Calculation
   const totalQuestions = currentAssessment.selectedStory ? currentAssessment.selectedStory.questions.length : 1;
   const earnedPoints = currentAssessment.scores.reduce((a, b) => a + b, 0);
   const compScore = Math.round((earnedPoints / totalQuestions) * 100);
@@ -642,12 +642,10 @@ function recalculateMetrics() {
   currentAssessment.accuracy = accuracy;
   currentAssessment.compScore = compScore;
 
-  // Metrics Display Update
   document.getElementById("calculated-wcpm").innerText = wcpm;
   document.getElementById("calculated-accuracy").innerText = accuracy + "%";
   document.getElementById("calculated-comp").innerText = compScore + "%";
 
-  // Hasbrouck & Tindal Diagnostic Logic
   const targetBenchmark = WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80;
   let profile = "Secure Reader";
   let verdict = "PASS";
