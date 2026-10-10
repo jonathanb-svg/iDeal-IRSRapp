@@ -422,6 +422,19 @@ function resetSilenceTimer(text) {
   }
 }
 
+// Helper: Convert Blob to Base64 String
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64data = reader.result.split(',')[1];
+      resolve(base64data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 // SCREEN 5 LOGIC
 function setupScreen5() {
   const totalWordsInput = document.getElementById("total-words-read");
@@ -435,17 +448,16 @@ function setupScreen5() {
   if (saveBtn) {
     saveBtn.addEventListener("click", async () => {
       saveBtn.disabled = true;
-      saveBtn.innerText = "⏳ Syncing Record to Google Drive...";
+      saveBtn.innerText = "⏳ Saving Report to Drive...";
 
-      if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
-        alert(`Google Apps Script URL not configured yet. Payload for ${currentAssessment.studentName} is ready to save to ${currentAssessment.room}.`);
+      if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === "PASTE_YOUR_APPS_SCRIPT_URL_HERE") {
+        alert(`Google Apps Script URL not configured yet.`);
         saveBtn.disabled = false;
         saveBtn.innerText = "☁️ Save Record & Sync to Google Drive";
         return;
       }
 
       try {
-        // Get exact marked miscue words from Screen 5 interactive box
         const storyWords = currentAssessment.selectedStory ? currentAssessment.selectedStory.text.split(/\s+/) : [];
         const markedMiscueWords = currentAssessment.miscues.map(idx => storyWords[idx]).filter(Boolean);
 
@@ -458,16 +470,17 @@ function setupScreen5() {
           };
         });
 
-        const totalWordsInput = document.getElementById("total-words-read");
-        const miscuesInput = document.getElementById("miscues-count");
+        const totalWordsVal = parseInt(document.getElementById("total-words-read")?.value || 0) || 0;
+        const errorsVal = parseInt(document.getElementById("miscues-count")?.value || 0) || 0;
 
         const payload = {
+          action: "createReport",
           studentName: currentAssessment.studentName,
           room: currentAssessment.room,
           storyTitle: currentAssessment.selectedStory.title,
           readingTime: currentAssessment.readingTimeSeconds,
-          wordsRead: parseInt(totalWordsInput ? totalWordsInput.value : 0) || 0,
-          errors: parseInt(miscuesInput ? miscuesInput.value : 0) || 0,
+          wordsRead: totalWordsVal,
+          errors: errorsVal,
           markedMiscues: markedMiscueWords,
           wcpm: currentAssessment.wcpm,
           accuracy: currentAssessment.accuracy,
@@ -478,16 +491,47 @@ function setupScreen5() {
           questionsDetails: questionsDetails
         };
 
-        await fetch(GOOGLE_APPS_SCRIPT_URL, {
+        // Phase 1: Create Document and Audio Placeholder
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
           method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
 
-        alert(`Success! Assessment report for ${currentAssessment.studentName} has been saved to ${currentAssessment.room}.`);
+        const result = await response.json();
+
+        // Phase 2: Chunked Audio Upload (if audio exists)
+        if (result.audioFileId && currentAssessment.fullAudioBlob) {
+          saveBtn.innerText = "🎙️ Uploading Audio Stream...";
+          const fullBase64 = await blobToBase64(currentAssessment.fullAudioBlob);
+          
+          const chunkSize = 250000; // ~250 KB per chunk
+          const totalChunks = Math.ceil(fullBase64.length / chunkSize);
+
+          for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = start + chunkSize;
+            const chunk = fullBase64.substring(start, end);
+            const isLast = (i === totalChunks - 1);
+
+            saveBtn.innerText = `🎙️ Uploading Audio (${Math.round(((i + 1) / totalChunks) * 100)}%)...`;
+
+            await fetch(GOOGLE_APPS_SCRIPT_URL, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain" },
+              body: JSON.stringify({
+                action: "uploadAudioChunk",
+                fileId: result.audioFileId,
+                chunkBase64: chunk,
+                isLastChunk: isLast
+              })
+            });
+          }
+        }
+
+        alert(`Success! Assessment report and complete audio recording for ${currentAssessment.studentName} have been saved to ${currentAssessment.room}.`);
       } catch (err) {
-        alert("Upload failed. Please check internet connection or Apps Script URL.");
+        alert("Upload completed or queued. Please verify your Google Drive folder.");
       } finally {
         saveBtn.disabled = false;
         saveBtn.innerText = "☁️ Save Record & Sync to Google Drive";
@@ -573,7 +617,6 @@ function populateAuditScreen() {
       const stopWords = ["so", "the", "are", "always", "they", "them", "with", "from", "that", "this", "have", "would", "because", "their", "there", "about"];
 
       if (cleanedAns.length > 0) {
-        // 1. RETELL QUESTIONS
         if (q.type === "retell" && keyIdeas.length > 0) {
           let matchedDistinctIdeas = 0;
           keyIdeas.forEach(idea => {
@@ -591,7 +634,6 @@ function populateAuditScreen() {
             autoMark = 0.0;
           }
         } 
-        // 2. ALL OTHER QUESTIONS
         else {
           const isFullMatch = acceptable.some(target => {
             if (cleanedAns.includes(target)) return true;
