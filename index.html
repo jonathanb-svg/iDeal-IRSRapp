@@ -9,16 +9,18 @@
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
       --success: #16a34a;
-      --warning: #eab308;
+      --warning: #ca8a04;
       --danger: #dc2626;
       --bg: #f8fafc;
       --card-bg: #ffffff;
-      --text: #1e293b;
-      --border: #e2e8f0;
+      --text: #0f172a;
+      --border: #cbd5e1;
     }
 
+    * { box-sizing: border-box; }
+
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -36,13 +38,12 @@
       background: var(--card-bg);
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       margin-top: 10px;
     }
 
     .hidden { display: none !important; }
 
-    /* Welcome & Forms */
     .welcome-card {
       background: #eff6ff;
       padding: 20px;
@@ -52,129 +53,197 @@
     }
 
     .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 8px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
     .form-group input, .form-group select {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 16px;
     }
 
-    /* Grid */
     .story-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 15px;
       margin-bottom: 25px;
     }
+
     .story-card {
       border: 2px solid var(--border);
       padding: 15px;
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease-in-out;
+      background: #fff;
     }
-    .story-card:hover { border-color: var(--primary); }
+
+    .story-card:hover { border-color: var(--primary); transform: translateY(-2px); }
     .story-card.selected {
       border-color: var(--primary);
       background-color: #eff6ff;
-    }
-    .card-badge {
-      font-size: 12px;
-      background: #e2e8f0;
-      padding: 2px 8px;
-      border-radius: 4px;
-      display: inline-block;
-      margin-bottom: 5px;
+      box-shadow: 0 0 0 2px var(--primary);
     }
 
-    /* Buttons */
+    .card-badge {
+      font-size: 12px;
+      font-weight: 600;
+      background: #e2e8f0;
+      color: #334155;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
     .btn {
-      padding: 12px 24px;
+      padding: 14px 24px;
       border: none;
       border-radius: 6px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-secondary { background: #64748b; color: white; }
-    .btn-success { background: var(--success); color: white; }
-    .btn-outline { border: 2px solid var(--border); background: transparent; }
 
-    /* Meter */
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-secondary { background: #475569; color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-outline { border: 2px solid var(--border); background: transparent; color: var(--text); }
+
+    .btn-listening {
+      background: var(--danger) !important;
+      color: white !important;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
     .meter-bar-bg {
-      background: var(--border);
-      height: 20px;
-      border-radius: 10px;
+      background: #e2e8f0;
+      height: 22px;
+      border-radius: 11px;
       overflow: hidden;
       margin: 10px 0;
     }
+
     .meter-bar-fill {
       background: var(--success);
       height: 100%;
       width: 0%;
-      transition: width 0.1s;
+      transition: width 0.05s ease-out;
     }
 
-    /* Zero-scroll reading container */
     .zero-scroll-container {
-      font-size: 18px;
-      line-height: 1.6;
-      background: #f1f5f9;
-      padding: 20px;
-      border-radius: 8px;
-      margin: 20px 0;
+      font-size: 16px;
+      line-height: 1.8;
+      background: #ffffff;
+      padding: 10px 0;
+      margin: 15px 0;
       white-space: pre-line;
+      color: #0f172a;
     }
 
-    /* Status Banner */
+    .inline-btn {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 8px;
+      vertical-align: middle;
+    }
+
     .status-banner {
       background: #fef3c7;
       color: #92400e;
-      padding: 12px;
-      border-radius: 6px;
-      font-weight: bold;
+      padding: 14px 20px;
+      border-radius: 8px;
+      font-weight: 700;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      border: 1px solid #fde68a;
     }
 
-    /* Question Container */
     .action-btn-row {
       display: flex;
       gap: 15px;
       margin: 15px 0;
     }
+
+    .action-btn-row .btn { flex: 1; }
+
     .text-box {
       width: 100%;
-      height: 100px;
-      padding: 10px;
+      height: 120px;
+      padding: 12px;
       border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 16px;
+      font-family: inherit;
+      resize: vertical;
     }
 
-    /* Audit Screen */
     .audit-section {
       background: #f8fafc;
-      padding: 15px;
+      padding: 20px;
       border: 1px solid var(--border);
       border-radius: 8px;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
+
+    .toggle-group { display: flex; gap: 8px; margin-top: 8px; }
     .toggle-group button {
-      padding: 5px 12px;
-      margin-right: 5px;
+      padding: 8px 14px;
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 6px;
+      background: #fff;
       cursor: pointer;
+      font-weight: 600;
     }
-    .toggle-group button.active {
-      background: var(--primary);
-      color: white;
+
+    .toggle-group button.active-pass { background: #dcfce7; color: #15803d; border-color: #86efac; }
+    .toggle-group button.active-warn { background: #fef9c3; color: #a16207; border-color: #fde047; }
+    .toggle-group button.active-fail { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+
+    .metric-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .word-click {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .word-click.miscue {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      text-decoration: line-through;
+      font-weight: bold;
+    }
+
+    .formula-box {
+      background: #e0f2fe;
+      border: 1px solid #7dd3fc;
+      color: #0369a1;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 15px;
+      margin: 12px 0;
     }
   </style>
 </head>
@@ -189,7 +258,7 @@
       </div>
 
       <div class="form-group">
-        <label for="room-select"><strong>Select Room / Class:</strong></label>
+        <label for="room-select">Select Room / Class Folder:</label>
         <select id="room-select">
           <option value="">-- Choose Room --</option>
           <option value="Room 40">Room 40</option>
@@ -208,25 +277,25 @@
       </div>
 
       <div class="form-group">
-        <label for="student-name"><strong>Student Name:</strong></label>
+        <label for="student-name">Student First & Last Name:</label>
         <input type="text" id="student-name" placeholder="e.g. Alex Smith" />
       </div>
 
       <div class="form-group">
-        <label><strong>Select Assessment Story:</strong></label>
+        <label>Select Assessment Story:</label>
         <div id="story-grid" class="story-grid"></div>
       </div>
 
-      <button id="btn-screen1-next" class="btn btn-primary" disabled>Continue to Mic Check ➔</button>
+      <button id="btn-screen1-next" class="btn btn-primary" style="width: 100%;" disabled>Continue to Mic Check ➔</button>
     </section>
 
     <!-- SCREEN 2: MIC CHECK -->
     <section id="screen-2" class="screen-container hidden">
       <h2>Microphone Check 🎤</h2>
-      <p>Let's make sure your mic is working clearly.</p>
+      <p>Let's make sure your microphone is picking up your voice clearly before we begin.</p>
 
       <div class="form-group">
-        <label>Volume Level:</label>
+        <label>Live Mic Input Meter:</label>
         <div class="meter-bar-bg">
           <div id="volume-meter-fill" class="meter-bar-fill"></div>
         </div>
@@ -237,80 +306,110 @@
         <button id="btn-play-test" class="btn btn-outline" disabled>▶️ Play Test Sample</button>
       </div>
 
-      <p id="mic-status-text">Click "Record 3-Sec Test" and speak.</p>
+      <p id="mic-status-text" style="font-weight: 600; color: #475569;">Click "Record 3-Sec Test" and speak into your microphone.</p>
 
-      <button id="btn-screen2-start" class="btn btn-success" disabled>Start Reading ➔</button>
+      <button id="btn-screen2-start" class="btn btn-success" style="width: 100%; margin-top: 15px;" disabled>Start Reading ➔</button>
     </section>
 
     <!-- SCREEN 3: READING PASSAGE -->
     <section id="screen-3" class="screen-container hidden">
       <div class="status-banner">
-        <span id="reading-status">🔴 Recording in progress...</span>
-        <span id="reading-timer">Time: 0s</span>
+        <span id="reading-status">🔴 Mic Ready</span>
+        <span id="reading-timer">Time: 00:00</span>
       </div>
 
-      <p style="margin-top: 15px;"><em>Click the button and begin reading right away.</em></p>
+      <p style="margin-top: 15px; color: #475569; font-weight: 600;">
+        Click the button and begin reading. Start reading right away...
+      </p>
 
-      <button id="btn-reading-start" class="btn btn-primary" style="margin-bottom: 10px;">▶️ Begin Reading</button>
-
-      <div id="passage-text-container" class="zero-scroll-container"></div>
-
-      <button id="btn-reading-finish" class="btn btn-success" disabled>⏹️ Finished Reading</button>
+      <div class="zero-scroll-container">
+        <button id="btn-reading-start" class="btn btn-primary inline-btn">▶️ Start Reading</button>
+        <span id="passage-body">Loading passage text...</span>
+        <button id="btn-reading-finish" class="btn btn-success inline-btn" disabled>⏹️ Finish Reading</button>
+      </div>
     </section>
 
     <!-- SCREEN 4: COMPREHENSION -->
     <section id="screen-4" class="screen-container hidden">
-      <p><em>Answer the question as completely as you can...</em></p>
-      <h3 id="question-tracker">Question 1</h3>
+      <p style="color: #64748b; font-weight: 600; margin-top: 0;">Answer the question as completely as you can...</p>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 id="question-tracker" style="color: var(--primary); margin: 0;">Question 1 of 8</h3>
+        <button id="btn-read-aloud" class="btn btn-outline" style="padding: 8px 16px;">🔊 Read Question Aloud</button>
+      </div>
+
+      <h2 id="question-display-text" style="margin: 20px 0; min-height: 50px; font-size: 22px;">Loading...</h2>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label for="answer-transcript" style="margin:0;">Your Answer (Spoken or Typed):</label>
+          <button id="btn-speak-answer" class="btn btn-secondary" style="padding: 8px 16px;">🎤 Speak Answer</button>
+        </div>
+        <textarea id="answer-transcript" class="text-box" placeholder="Click 'Speak Answer' or type response here..."></textarea>
+      </div>
+
+      <div id="elaboration-box" class="welcome-card hidden" style="border-left-color: var(--warning); background-color: #fefce8;">
+        <p style="margin: 0; color: #854d0e;">💡 <strong>Elaboration Prompt:</strong> Can you tell me a little bit more about that?</p>
+      </div>
 
       <div class="action-btn-row">
-        <button id="btn-read-aloud" class="btn btn-outline">🔊 Read Question Aloud</button>
-        <button id="btn-speak-answer" class="btn btn-secondary">🎤 Speak Answer</button>
+        <button id="btn-prev-question" class="btn btn-outline" disabled>⬅️ Previous Question</button>
+        <button id="btn-next-question" class="btn btn-primary">Next Question ➔</button>
       </div>
-
-      <h2 id="question-display-text">Question text goes here...</h2>
-
-      <textarea id="answer-transcript" class="text-box" placeholder="Your spoken answer will appear here..."></textarea>
-
-      <div id="elaboration-box" class="welcome-card hidden" style="margin-top:15px; border-color: var(--warning);">
-        <p>💡 <strong>Elaboration Prompt:</strong> Can you tell me a little bit more about that?</p>
-      </div>
-
-      <button id="btn-next-question" class="btn btn-primary" style="margin-top: 15px;">Next Question ➔</button>
     </section>
 
     <!-- SCREEN 5: AUDIT REPORT -->
     <section id="screen-5" class="screen-container hidden">
       <h2>Teacher Assessment Audit 📋</h2>
 
+      <!-- SECTION 1: AUDIO & READING TIMING -->
       <div class="audit-section">
-        <h3>1. Audio Recording & Calculation</h3>
-        <audio id="full-audio-player" controls style="width:100%; margin-bottom:10px;"></audio>
-        <div class="form-group">
-          <label>Total Words Read in 1 Minute:</label>
-          <input type="number" id="words-1min" value="100" />
+        <h3>1. Student Audio Playback & Timing</h3>
+        <audio id="full-audio-player" controls style="width: 100%; margin-bottom: 15px;"></audio>
+        
+        <p><strong>Total Reading Time:</strong> <span id="audit-read-time">0</span> seconds (<span id="audit-read-time-formatted">00:00</span>)</p>
+
+        <h4>Interactive Miscue Breakdown (Click words to mark as error):</h4>
+        <div id="interactive-text-box" style="line-height: 2; background: #fff; padding: 15px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px;"></div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            <label for="total-words-read">Total Words Read:</label>
+            <input type="number" id="total-words-read" value="0" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="miscues-count">Total Errors / Miscues:</label>
+            <input type="number" id="miscues-count" value="0" min="0" />
+          </div>
         </div>
-        <div class="form-group">
-          <label>Total Miscues / Errors:</label>
-          <input type="number" id="miscues-count" value="0" />
+
+        <div class="formula-box">
+          WCPM = [ (Words Read - Errors) / Total Seconds ] × 60<br>
+          WCPM = [ (<span id="formula-words">0</span> - <span id="formula-errors">0</span>) / <span id="formula-seconds">1</span> ] × 60 = <strong id="formula-result">0</strong>
         </div>
-        <p><strong>Calculated WCPM:</strong> <span id="calculated-wcpm">100</span> WCPM</p>
-        <p><strong>Accuracy Score:</strong> <span id="calculated-accuracy">100%</span></p>
+
+        <div style="display: flex; gap: 20px; background: #fff; padding: 15px; border-radius: 6px; border: 1px solid var(--border);">
+          <p style="margin:0;"><strong>Calculated WCPM:</strong> <span id="calculated-wcpm" style="font-size: 20px; font-weight:700; color:var(--primary);">0</span></p>
+          <p style="margin:0;"><strong>Accuracy Rate:</strong> <span id="calculated-accuracy" style="font-size: 20px; font-weight:700; color:var(--success);">100%</span></p>
+        </div>
       </div>
 
+      <!-- SECTION 2: RUBRIC OVERRIDE -->
       <div class="audit-section">
-        <h3>2. Question Scoring Override</h3>
+        <h3>2. Question Rubric Override & Scoring</h3>
         <div id="audit-questions-list"></div>
-        <p><strong>Comprehension Score:</strong> <span id="calculated-comp">0%</span></p>
+        <p style="margin-top: 15px;"><strong>Overall Comprehension Score:</strong> <span id="calculated-comp" style="font-size: 20px; font-weight:700; color:var(--primary);">0%</span></p>
       </div>
 
+      <!-- SECTION 3: DIAGNOSTIC VERDICT -->
       <div class="audit-section">
-        <h3>3. Diagnostic Verdict</h3>
-        <p><strong>Reader Profile:</strong> <span id="badge-profile" class="card-badge">Evaluating...</span></p>
-        <p><strong>Level Verdict:</strong> <span id="badge-verdict" class="card-badge">Evaluating...</span></p>
+        <h3>3. Diagnostic Verdict Summary</h3>
+        <p><strong>iDeaL® Reader Profile:</strong> <span id="badge-profile" class="metric-badge" style="background:#e2e8f0;">Evaluating...</span></p>
+        <p><strong>Assessment Level Verdict:</strong> <span id="badge-verdict" class="metric-badge" style="background:#e2e8f0;">Evaluating...</span></p>
       </div>
 
-      <button id="btn-save-drive" class="btn btn-success">☁️ Save Assessment & Upload to Google Drive</button>
+      <button id="btn-save-drive" class="btn btn-success" style="width: 100%; margin-bottom: 12px;">☁️ Save Record & Sync to Google Drive</button>
+      <button id="btn-next-student" class="btn btn-secondary" style="width: 100%;">🔄 Finish & Start Next Student</button>
     </section>
 
   </div>
