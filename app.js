@@ -2,7 +2,7 @@
  * iDeaL® Assessment App - Engine Logic
  */
 
-const GOOGLE_APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
+const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyE3dB6CiRPxOUYn7GD1YyrDC_0hz3UdZIVrKgRE7oeDMnFT8ZJhNONWDkVFDttyOdw2w/exec";
 
 let currentAssessment = {
   room: "",
