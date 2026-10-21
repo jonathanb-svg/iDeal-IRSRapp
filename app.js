@@ -16,7 +16,10 @@ let currentAssessment = {
   accuracy: 100,
   compScore: 0,
   fullAudioBlob: null,
-  readingTranscript: ""
+  readingTranscript: "",
+  fluencyLevel: null,
+  fluencyDescriptor: "",
+  teacherNotes: ""
 };
 
 let micStream = null;
@@ -39,6 +42,14 @@ const WCPM_BENCHMARKS = {
   4: 97,
   5: 120,
   6: 133
+};
+
+// Fluency Indicator Scale Descriptors
+const FLUENCY_RUBRIC_DATA = {
+  1: "Reads word by word with frequent pauses. Reading is slow and effortful. Reading has little expression. Hesitations and repetitions are common.",
+  2: "Reads in short phrases. Reading has an uneven pacing. Some pauses and hesitations remain. Expression and phrasing are limited and inconsistent.",
+  3: "Reads mostly smoothly in phrases. Pace is generally appropriate. Occasional breaks or self corrections. Expression and intonation support meaning.",
+  4: "Reads smoothly and confidently. Reads at a conversational pace. Phrasing follows punctuation. Reads with natural expression that enhances meaning."
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -472,6 +483,10 @@ function setupScreen5() {
 
         const totalWordsVal = parseInt(document.getElementById("total-words-read")?.value || 0) || 0;
         const errorsVal = parseInt(document.getElementById("miscues-count")?.value || 0) || 0;
+        
+        // Capture teacher notes
+        const notesBox = document.getElementById("teacher-notes-input");
+        currentAssessment.teacherNotes = notesBox ? notesBox.value : "";
 
         const payload = {
           action: "createReport",
@@ -486,8 +501,11 @@ function setupScreen5() {
           accuracy: currentAssessment.accuracy,
           compScore: currentAssessment.compScore,
           benchmark: WCPM_BENCHMARKS[currentAssessment.selectedStory.yearLevel] || 80,
+          fluencyLevel: currentAssessment.fluencyLevel,
+          fluencyDescriptor: currentAssessment.fluencyDescriptor,
           profile: document.getElementById("badge-profile").innerText,
           verdict: document.getElementById("badge-verdict").innerText,
+          teacherNotes: currentAssessment.teacherNotes,
           questionsDetails: questionsDetails
         };
 
@@ -535,9 +553,100 @@ function setupScreen5() {
   }
 }
 
+function selectFluencyLevel(level) {
+  currentAssessment.fluencyLevel = level;
+  currentAssessment.fluencyDescriptor = FLUENCY_RUBRIC_DATA[level] || "";
+
+  document.querySelectorAll(".fluency-card").forEach(card => {
+    card.style.borderColor = "#cbd5e1";
+    card.style.backgroundColor = "#ffffff";
+  });
+
+  const selectedCard = document.getElementById(`fluency-card-${level}`);
+  if (selectedCard) {
+    selectedCard.style.borderColor = "#10b981";
+    selectedCard.style.backgroundColor = "#ecfdf5";
+  }
+}
+
+function renderFluencyRubricUI() {
+  const container = document.getElementById("fluency-rubric-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <h3 style="margin: 16px 0 8px 0;">Fluency Indicator Scale (1–4)</h3>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
+      <div id="fluency-card-1" class="fluency-card" onclick="selectFluencyLevel(1)" style="border: 2px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 10px; cursor: pointer;">
+        <div style="font-weight: bold; font-size: 18px; color: #1e293b; margin-bottom: 6px; text-align: center;">1</div>
+        <ul style="margin: 0; padding-left: 16px; font-size: 13px; color: #475569; line-height: 1.4;">
+          <li>Reads word by word with frequent pauses</li>
+          <li>Reading is slow and effortful</li>
+          <li>Reading has little expression</li>
+          <li>Hesitations and repetitions are common</li>
+        </ul>
+      </div>
+
+      <div id="fluency-card-2" class="fluency-card" onclick="selectFluencyLevel(2)" style="border: 2px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 10px; cursor: pointer;">
+        <div style="font-weight: bold; font-size: 18px; color: #1e293b; margin-bottom: 6px; text-align: center;">2</div>
+        <ul style="margin: 0; padding-left: 16px; font-size: 13px; color: #475569; line-height: 1.4;">
+          <li>Reads in short phrases</li>
+          <li>Reading has an uneven pacing</li>
+          <li>Some pauses and hesitations remain</li>
+          <li>Expression and phrasing are limited and inconsistent</li>
+        </ul>
+      </div>
+
+      <div id="fluency-card-3" class="fluency-card" onclick="selectFluencyLevel(3)" style="border: 2px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 10px; cursor: pointer;">
+        <div style="font-weight: bold; font-size: 18px; color: #1e293b; margin-bottom: 6px; text-align: center;">3</div>
+        <ul style="margin: 0; padding-left: 16px; font-size: 13px; color: #475569; line-height: 1.4;">
+          <li>Reads mostly smoothly in phrases</li>
+          <li>Pace is generally appropriate</li>
+          <li>Occasional breaks or self corrections</li>
+          <li>Expression and intonation support meaning</li>
+        </ul>
+      </div>
+
+      <div id="fluency-card-4" class="fluency-card" onclick="selectFluencyLevel(4)" style="border: 2px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 10px; cursor: pointer;">
+        <div style="font-weight: bold; font-size: 18px; color: #1e293b; margin-bottom: 6px; text-align: center;">4</div>
+        <ul style="margin: 0; padding-left: 16px; font-size: 13px; color: #475569; line-height: 1.4;">
+          <li>Reads smoothly and confidently</li>
+          <li>Reads at a conversational pace</li>
+          <li>Phrasing follows punctuation</li>
+          <li>Reads with natural expression that enhances meaning</li>
+        </ul>
+      </div>
+    </div>
+  `;
+
+  if (currentAssessment.fluencyLevel) {
+    selectFluencyLevel(currentAssessment.fluencyLevel);
+  }
+}
+
+function renderTeacherNotesUI() {
+  const container = document.getElementById("teacher-notes-container");
+  if (!container) return;
+
+  container.innerHTML = `
+    <h3 style="margin: 16px 0 8px 0;">Teacher Notes & Observations</h3>
+    <textarea id="teacher-notes-input" placeholder="Type optional notes or observations here..." style="width: 100%; height: 90px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 14px; box-sizing: border-box; resize: vertical; overflow-y: auto;"></textarea>
+  `;
+
+  const notesBox = document.getElementById("teacher-notes-input");
+  if (notesBox) {
+    notesBox.value = currentAssessment.teacherNotes || "";
+    notesBox.addEventListener("input", (e) => {
+      currentAssessment.teacherNotes = e.target.value;
+    });
+  }
+}
+
 function populateAuditScreen() {
   const story = currentAssessment.selectedStory;
   if (!story) return;
+
+  renderTeacherNotesUI();
+  renderFluencyRubricUI();
 
   const readTimeSpan = document.getElementById("audit-read-time");
   const readTimeFormatted = document.getElementById("audit-read-time-formatted");
@@ -785,7 +894,10 @@ function resetAssessmentState() {
     accuracy: 100,
     compScore: 0,
     fullAudioBlob: null,
-    readingTranscript: ""
+    readingTranscript: "",
+    fluencyLevel: null,
+    fluencyDescriptor: "",
+    teacherNotes: ""
   };
 
   document.getElementById("room-select").value = "";
